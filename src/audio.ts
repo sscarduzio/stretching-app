@@ -142,11 +142,34 @@ let musicOn = false;
 interface Pad { master: GainNode; oscs: { o: OscillatorNode; lfo: OscillatorNode }[]; fLfo: OscillatorNode }
 let pad: Pad | null = null;
 
+// iOS ignores assignments to HTMLMediaElement.volume (hardware-buttons only),
+// so music is routed element → MediaElementSource → gain → destination and
+// the slider drives the gain node instead.
+let musicGain: GainNode | null = null;
+const trackSources = new WeakSet<HTMLAudioElement>();
+
+function musicBus(): GainNode {
+  if (!musicGain) {
+    const ctx = ensureAudio();
+    musicGain = ctx.createGain();
+    musicGain.gain.value = cfg().volume;
+    musicGain.connect(ctx.destination);
+  }
+  return musicGain;
+}
+
+function routeTrack(a: HTMLAudioElement): void {
+  if (trackSources.has(a)) return;
+  ensureAudio().createMediaElementSource(a).connect(musicBus());
+  trackSources.add(a);
+}
+
 export function startMusic(): void {
   if (musicOn || !cfg().music) return;
   musicOn = true;
   const a = tracks[cfg().mode];
-  a.volume = cfg().volume;
+  routeTrack(a);
+  musicBus().gain.value = cfg().volume;
   a.play().catch(() => startPadFallback());
 }
 
@@ -155,8 +178,9 @@ export function restartMusic(): void {
   if (!cfg().music) return;
   stopPadFallback();
   const a = tracks[cfg().mode];
+  routeTrack(a);
   a.currentTime = 0;
-  a.volume = cfg().volume;
+  musicBus().gain.value = cfg().volume;
   musicOn = true;
   a.play().catch(() => startPadFallback());
 }
@@ -177,7 +201,7 @@ export function stopMusic(): void {
 }
 
 export function setMusicVolume(v: number): void {
-  Object.values(tracks).forEach((a) => { if (!a.paused) a.volume = v; });
+  if (musicGain) musicGain.gain.value = v;
   if (pad) pad.master.gain.value = v * 0.5;
 }
 

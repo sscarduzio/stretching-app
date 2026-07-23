@@ -49,14 +49,17 @@ function PresetChip({ p, settings }: { p: Preset; settings: Settings }) {
   );
 }
 
-export const SOUND_CHIPS = [
+const ALL_CHIPS = [
   { k: 'voice', icon: '🔊', label: () => t.config.voice },
   { k: 'beeps', icon: '⏱️', label: () => t.config.beeps },
   { k: 'vibrate', icon: '📳', label: () => t.config.haptics },
   { k: 'music', icon: '🎵', label: () => t.config.music },
 ] as const;
 
-export function SoundChip({ k, icon, label }: (typeof SOUND_CHIPS)[number]) {
+// iOS WebKit has no Vibration API — don't show a toggle that can't work
+export const SOUND_CHIPS = ALL_CHIPS.filter((c) => c.k !== 'vibrate' || 'vibrate' in navigator);
+
+export function SoundChip({ k, icon, label }: (typeof ALL_CHIPS)[number]) {
   const on = useApp((s) => s[k]);
   return (
     <button
