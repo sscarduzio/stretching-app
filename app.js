@@ -2,27 +2,37 @@
   'use strict';
 
   /* ============================================================
-     Stretch Timer  ·  glassy edition
+     Stretch & Box Timer  ·  glassy edition
      - performance.now()-driven, drift-free countdown
-     - plan engine: hold / recover / rest  (stretches × rounds)
+     - Two modes:
+       · STRETCH: hold / recover / rest  (stretches × rounds, L/R)
+       · BOX: work / rest  (N rounds, coach calls punch combos)
      - Voice: pre-generated static audio atoms (no API key, no
-       runtime TTS). Cues are decomposed into reusable clips and
-       sequenced with small gaps that read as natural yoga-teacher
-       pauses. Missing atoms fail silently; beeps still fire.
+       runtime TTS). Stretch = Shimmer (calm yoga); Box = Onyx
+       (energetic coach). Missing atoms fail silently.
      - Active-session dashboard: wall clock, ETA, overall donut,
-       stat gauges, rep grid, time-split bar, next-up card
-     - Web Audio beeps, haptics, wake lock, real background track
+       stat gauges, rep/round grid, time-split bar, next-up card
+     - Web Audio beeps, haptics, wake lock, background track
      - settings persisted to localStorage
      ============================================================ */
 
-  const STORAGE_KEY = 'stretchTimer.settings.v4';
+  const STORAGE_KEY = 'stretchTimer.settings.v5';
   const VOICE_DIR = 'audio/voice/';
 
   const DEFAULTS = {
+    mode: 'stretch',
     hold: 30, recover: 5, rest: 0, stretches: 1, reps: 10,
+    boxRounds: 6, boxWork: 60, boxRest: 20, boxCombos: 15,
     voice: true, beeps: true, vibrate: true, music: false, volume: 0.35,
   };
   const cfg = { ...DEFAULTS };
+
+  // Boxing combination atoms (cycled during work phases)
+  const COMBOS = [
+    'box_combo_12', 'box_combo_123', 'box_combo_112', 'box_combo_232',
+    'box_combo_32', 'box_combo_1232', 'box_combo_jabbody', 'box_combo_slip',
+    'box_combo_roll', 'box_combo_djab', 'box_combo_hook', 'box_combo_12h',
+  ];
 
   // ---------- State ----------
   const state = {
@@ -30,8 +40,9 @@
     plan: [], idx: 0,
     phaseStart: 0, pauseAt: 0,
     raf: 0, lastCount: -1, lastDisplay: -1,
-    startedAt: 0, totalTime: 0, totalPhases: 0, holdsTotal: 0,
+    startedAt: 0, totalTime: 0, totalPhases: 0, primaryTotal: 0,
     clockTimer: 0, lastDash: 0,
+    comboPlan: [], comboPtr: 0,
   };
 
   // ---------- DOM ----------
@@ -59,6 +70,18 @@
   const runVolVal = $('#run-vol-val');
   const doneStats = $('#done-stats');
   const bgAudio = $('#bg-audio');
+  const brandLogo = $('#brand-logo');
+  const brandTitle = $('#brand-title');
+  const brandSubtitle = $('#brand-subtitle');
+  const gradStart = $('#grad-start');
+  const gradEnd = $('#grad-end');
+  const stretchFields = $('#stretch-fields');
+  const boxFields = $('#box-fields');
+  const repTitle = $('#rep-title');
+  const statHoldsLabel = $('#stat-holds-label');
+  const lgHoldWrap = $('#lg-hold-wrap');
+  const lgHoldLabel = $('#lg-hold-label');
+  const lgRecoverWrap = $('#lg-recover-wrap');
 
   // Dashboard refs
   const wallClock = $('#wall-clock');
@@ -84,6 +107,9 @@
   const RING_LEN = 100;
   ringFg.style.strokeDasharray = RING_LEN;
   ringFg.style.strokeDashoffset = 0;
+
+  const isBox = () => cfg.mode === 'box';
+  const primaryType = () => (isBox() ? 'work' : 'hold');
 
   // ---------- Audio context ----------
   let actx = null;
@@ -111,7 +137,7 @@
   // ============================================================
   const atomCache = new Map();    // name -> AudioBuffer
   const atomLoading = new Map();  // name -> Promise<AudioBuffer>
-  const ATOM_GAP = 0.14;          // seconds between atoms (yoga-teacher pause)
+  const ATOM_GAP = isBox() ? 0.10 : 0.14;  // tighter gap for coach
 
   async function loadAtom(name) {
     if (atomCache.has(name)) return atomCache.get(name);
@@ -128,12 +154,7 @@
     return p;
   }
 
-  // Schedule one atom at an absolute time; returns its end time.
-  // Single voice bus: only one voice cue plays at a time. Starting a
-  // new cue cuts any currently-playing/scheduled voice so cues never
-  // overlap. (The 3-2-1 count clips are ~1.1s each but fire every 1.0s,
-  // and the final count bleeds into the next phase's announcement —
-  // cutting on new cue fixes all of that cleanly.)
+  // Single voice bus: only one voice cue plays at a time.
   let voiceGain = null;
   const activeSources = [];
   function voiceBus() {
@@ -168,11 +189,10 @@
     return when + ab.duration;
   }
 
-  // Play a chain of atoms back-to-back with a small gap between.
   async function playSequence(names, gap = ATOM_GAP) {
     if (!names.length) return;
     try {
-      cutVoice();                       // new cue replaces any in-flight voice
+      cutVoice();
       const ctx = ensureAudio();
       let t = ctx.currentTime + 0.02;
       for (const name of names) {
@@ -183,33 +203,49 @@
   }
   function playAtom(name) { return playSequence([name], 0); }
 
+  // ---------- Mode-aware voice ----------
   function preloadVoice() {
-    const names = new Set(['done', 'relax_switch', 'relax_next', 'rest',
-      'left_stretch', 'right_stretch', 'count_1', 'count_2', 'count_3']);
-    for (let r = 1; r <= cfg.reps; r++) names.add('round_' + r);
-    for (let s = 2; s <= cfg.stretches; s++) names.add('rest_stretch_' + s);
+    const names = new Set();
+    if (isBox()) {
+      names.add('box_work'); names.add('box_rest'); names.add('box_done');
+      names.add('box_count_1'); names.add('box_count_2'); names.add('box_count_3');
+      for (let r = 1; r <= cfg.boxRounds; r++) names.add('box_round_' + r);
+      if (cfg.boxCombos > 0) COMBOS.forEach((c) => names.add(c));
+    } else {
+      names.add('done'); names.add('relax_switch'); names.add('relax_next'); names.add('rest');
+      names.add('left_stretch'); names.add('right_stretch');
+      names.add('count_1'); names.add('count_2'); names.add('count_3');
+      for (let r = 1; r <= cfg.reps; r++) names.add('round_' + r);
+      for (let s = 2; s <= cfg.stretches; s++) names.add('rest_stretch_' + s);
+    }
     names.forEach((n) => loadAtom(n).catch(() => {}));
   }
 
-  function speakHold(round, side) {
+  function speakStart(p) {
     if (!cfg.voice) return;
-    playSequence(['round_' + round, side + '_stretch']);
+    if (isBox()) playSequence(['box_round_' + p.round, 'box_work']);
+    else playSequence(['round_' + p.round, p.side + '_stretch']);
   }
   function speakRecover(nextStretch) {
-    if (!cfg.voice) return;
+    if (!cfg.voice || isBox()) return;
     playAtom(nextStretch ? 'relax_next' : 'relax_switch');
   }
-  function speakRest(hasNext, n) {
+  function speakRest(p) {
     if (!cfg.voice) return;
-    playAtom(hasNext ? 'rest_stretch_' + n : 'rest');
+    if (isBox()) playAtom('box_rest');
+    else playAtom(p.nextStretch > p.stretch ? 'rest_stretch_' + p.nextStretch : 'rest');
   }
   function speakCount(n) {
     if (!cfg.voice) return;
-    playAtom('count_' + n);
+    playAtom((isBox() ? 'box_count_' : 'count_') + n);
+  }
+  function speakCombo(name) {
+    if (!cfg.voice) return;
+    playAtom(name);
   }
   function speakDone() {
     if (!cfg.voice) return;
-    playAtom('done');
+    playAtom(isBox() ? 'box_done' : 'done');
   }
 
   // ============================================================
@@ -267,8 +303,51 @@
     if (state.running && !state.paused && document.visibilityState === 'visible') requestWakeLock();
   });
 
+  // ---------- Mode ----------
+  function setMode(mode) {
+    cfg.mode = mode;
+    document.body.dataset.mode = mode;
+    stretchFields.hidden = (mode !== 'stretch');
+    boxFields.hidden = (mode !== 'box');
+    stretchLabel.style.display = (mode === 'stretch') ? '' : 'none';
+
+    if (mode === 'box') {
+      brandLogo.textContent = '🥊';
+      brandTitle.innerHTML = 'Box<span>.</span>';
+      brandSubtitle.textContent = 'Shadow box · combos · rounds';
+      if (gradStart) gradStart.setAttribute('stop-color', '#ffb84d');
+      if (gradEnd) gradEnd.setAttribute('stop-color', '#ff4d3d');
+      repTitle.textContent = 'Rounds';
+      statHoldsLabel.textContent = 'rounds';
+      lgHoldLabel.textContent = 'Work';
+      if (lgRecoverWrap) lgRecoverWrap.style.display = 'none';
+    } else {
+      brandLogo.textContent = '🧘';
+      brandTitle.innerHTML = 'Stretch<span>.</span>';
+      brandSubtitle.textContent = 'Hold · recover · alternate sides';
+      if (gradStart) gradStart.setAttribute('stop-color', '#ff7a7a');
+      if (gradEnd) gradEnd.setAttribute('stop-color', '#ff3d6e');
+      repTitle.textContent = 'Repetitions';
+      statHoldsLabel.textContent = 'holds';
+      lgHoldLabel.textContent = 'Hold';
+      if (lgRecoverWrap) lgRecoverWrap.style.display = '';
+    }
+
+    document.querySelectorAll('.mode-btn').forEach((b) => {
+      const active = b.dataset.mode === mode;
+      b.classList.toggle('is-active', active);
+      b.setAttribute('aria-selected', active);
+    });
+    updateSummary();
+    saveSettings();
+  }
+
   // ---------- Plan ----------
   function buildPlan() {
+    if (isBox()) return buildBoxPlan();
+    return buildStretchPlan();
+  }
+  function buildStretchPlan() {
     const plan = []; const totalHolds = cfg.stretches * cfg.reps; let holdIndex = 0;
     for (let s = 1; s <= cfg.stretches; s++) {
       for (let r = 1; r <= cfg.reps; r++) {
@@ -285,7 +364,18 @@
     }
     return plan;
   }
+  function buildBoxPlan() {
+    const plan = [];
+    for (let r = 1; r <= cfg.boxRounds; r++) {
+      plan.push({ type: 'work', round: r, duration: cfg.boxWork });
+      if (r < cfg.boxRounds && cfg.boxRest > 0) {
+        plan.push({ type: 'rest', round: r, duration: cfg.boxRest, nextRound: r + 1 });
+      }
+    }
+    return plan;
+  }
   function totalDuration() { return buildPlan().reduce((s, p) => s + p.duration, 0); }
+  function primaryCount() { return isBox() ? cfg.boxRounds : cfg.stretches * cfg.reps; }
 
   // ---------- Dashboard helpers ----------
   function fmtClock(ms) {
@@ -300,9 +390,10 @@
     if (h > 0) return `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
     return `${m}:${s.toString().padStart(2,'0')}`;
   }
-  function holdsBeforeIdx(i) {
+  function primaryBeforeIdx(i) {
+    const t = primaryType();
     let n = 0;
-    for (let k = 0; k < i; k++) if (state.plan[k].type === 'hold') n++;
+    for (let k = 0; k < i; k++) if (state.plan[k].type === t) n++;
     return n;
   }
   function elapsedTotal() {
@@ -316,6 +407,15 @@
 
   function renderRepGrid() {
     repGrid.innerHTML = '';
+    if (isBox()) {
+      const row = document.createElement('div'); row.className = 'rep-dots';
+      for (let i = 0; i < cfg.boxRounds; i++) {
+        const dot = document.createElement('span'); dot.className = 'rep-dot'; dot.dataset.i = i; row.appendChild(dot);
+      }
+      const wrap = document.createElement('div'); wrap.className = 'rep-group'; wrap.appendChild(row);
+      repGrid.appendChild(wrap);
+      return;
+    }
     if (cfg.stretches === 1) {
       const row = document.createElement('div'); row.className = 'rep-dots';
       for (let i = 0; i < cfg.reps; i++) {
@@ -337,9 +437,9 @@
     }
   }
   function updateRepGrid() {
-    const doneCount = holdsBeforeIdx(state.idx);
-    const curIsHold = state.plan[state.idx]?.type === 'hold';
-    const currentN = curIsHold ? doneCount : -1;
+    const doneCount = primaryBeforeIdx(state.idx);
+    const curIsPrimary = state.plan[state.idx]?.type === primaryType();
+    const currentN = curIsPrimary ? doneCount : -1;
     repGrid.querySelectorAll('.rep-dot').forEach((dot) => {
       const i = +dot.dataset.i;
       dot.classList.toggle('done', i < doneCount);
@@ -351,7 +451,7 @@
     const plan = state.plan.length ? state.plan : buildPlan();
     let h = 0, rec = 0, rest = 0;
     for (const p of plan) {
-      if (p.type === 'hold') h += p.duration;
+      if (p.type === 'hold' || p.type === 'work') h += p.duration;
       else if (p.type === 'recover') rec += p.duration;
       else if (p.type === 'rest') rest += p.duration;
     }
@@ -370,12 +470,20 @@
       nextIcon.textContent = '🎉'; nextText.textContent = 'Finish'; nextDur.textContent = '';
       return;
     }
-    if (next.type === 'hold') {
-      nextIcon.textContent = '🤸'; nextText.textContent = `${next.side} side · stretch`;
-    } else if (next.type === 'recover') {
-      nextIcon.textContent = '🔄'; nextText.textContent = next.nextStretch > next.stretch ? 'Next stretch' : 'Switch sides';
-    } else if (next.type === 'rest') {
-      nextIcon.textContent = '💨'; nextText.textContent = 'Rest';
+    if (isBox()) {
+      if (next.type === 'work') {
+        nextIcon.textContent = '🥊'; nextText.textContent = `Round ${next.round} · box`;
+      } else if (next.type === 'rest') {
+        nextIcon.textContent = '💧'; nextText.textContent = 'Rest';
+      }
+    } else {
+      if (next.type === 'hold') {
+        nextIcon.textContent = '🤸'; nextText.textContent = `${next.side} side · stretch`;
+      } else if (next.type === 'recover') {
+        nextIcon.textContent = '🔄'; nextText.textContent = next.nextStretch > next.stretch ? 'Next stretch' : 'Switch sides';
+      } else if (next.type === 'rest') {
+        nextIcon.textContent = '💨'; nextText.textContent = 'Rest';
+      }
     }
     nextDur.textContent = next.duration + 's';
   }
@@ -388,9 +496,9 @@
     overallDonut.style.strokeDashoffset = (100 * (1 - pct)).toFixed(2);
     statElapsed.textContent = fmtDur(elapsed);
     statRemaining.textContent = fmtDur(remaining);
-    const doneHolds = holdsBeforeIdx(state.idx);
-    statHolds.textContent = `${doneHolds} / ${state.holdsTotal}`;
-    repCount.textContent = `${doneHolds} / ${state.holdsTotal}`;
+    const donePrimary = primaryBeforeIdx(state.idx);
+    statHolds.textContent = `${donePrimary} / ${state.primaryTotal}`;
+    repCount.textContent = `${donePrimary} / ${state.primaryTotal}`;
     phaseStep.textContent = `Phase ${Math.min(state.idx + 1, state.totalPhases)} / ${state.totalPhases}`;
     updateRepGrid();
   }
@@ -410,26 +518,48 @@
     if (!p) return finish();
     state.phaseStart = performance.now();
     state.lastCount = -1; state.lastDisplay = -1;
+    state.comboPlan = []; state.comboPtr = 0;
     setPhaseTheme(p.type);
 
     if (p.type === 'hold') {
-      speakHold(p.round, p.side);
+      speakStart(p);
       haptic(220);
       sideEl.textContent = p.side.toUpperCase(); sideEl.style.color = 'var(--accent)';
       phaseEl.textContent = 'STRETCH';
+    } else if (p.type === 'work') {
+      speakStart(p);
+      haptic(300);
+      sideEl.textContent = 'BOX'; sideEl.style.color = 'var(--accent)';
+      phaseEl.textContent = 'WORK';
+      // schedule combo calls during the round
+      if (cfg.boxCombos > 0 && cfg.voice) {
+        const interval = cfg.boxCombos;
+        const firstAt = 5;
+        const lastAllowed = p.duration - 6;
+        let t = firstAt, ci = Math.floor(Math.random() * COMBOS.length);
+        while (t < lastAllowed) {
+          state.comboPlan.push({ at: t, name: COMBOS[ci % COMBOS.length] });
+          ci++; t += interval;
+        }
+      }
     } else if (p.type === 'recover') {
       speakRecover(p.nextStretch > p.stretch);
       haptic([110, 60, 110]);
       sideEl.textContent = 'SWITCH'; sideEl.style.color = 'var(--muted)';
       phaseEl.textContent = 'SWITCH';
     } else if (p.type === 'rest') {
-      speakRest(p.nextStretch > p.stretch, p.nextStretch);
+      speakRest(p);
       haptic([160, 80, 160]);
       sideEl.textContent = 'REST'; sideEl.style.color = 'var(--rest)';
       phaseEl.textContent = 'REST';
     }
-    stretchLabel.textContent = `Stretch ${p.stretch} / ${cfg.stretches}`;
-    roundLabel.textContent = `Round ${p.round} / ${cfg.reps}`;
+
+    if (isBox()) {
+      roundLabel.textContent = `Round ${p.round} / ${cfg.boxRounds}`;
+    } else {
+      stretchLabel.textContent = `Stretch ${p.stretch} / ${cfg.stretches}`;
+      roundLabel.textContent = `Round ${p.round} / ${cfg.reps}`;
+    }
     updateNextCard();
     updateDashboard();
     state.raf = requestAnimationFrame(tick);
@@ -458,16 +588,24 @@
     const progress = Math.min(1, elapsed / p.duration);
     ringFg.style.strokeDashoffset = RING_LEN * progress;
 
-    // dashboard updates throttled to ~4fps (ring + countdown stay at 60fps)
+    // dashboard updates throttled to ~4fps
     const nowMs = performance.now();
     if (nowMs - state.lastDash > 240) { state.lastDash = nowMs; updateDashboard(); }
+
+    // combo calls during work (box mode)
+    if (p.type === 'work' && state.comboPtr < state.comboPlan.length) {
+      if (elapsed >= state.comboPlan[state.comboPtr].at) {
+        speakCombo(state.comboPlan[state.comboPtr].name);
+        state.comboPtr++;
+      }
+    }
 
     if (remaining > 0 && remaining <= 3.05) {
       const count = Math.ceil(remaining);
       if (count !== state.lastCount && count >= 1 && count <= 3) {
         state.lastCount = count;
         beep(count === 1 ? 1320 : 880, 0.16);
-        if (p.type === 'hold') speakCount(count);
+        if (p.type === 'hold' || p.type === 'work') speakCount(count);
         haptic(40);
       }
     }
@@ -488,7 +626,7 @@
     state.startedAt = Date.now();
     state.totalTime = totalDuration();
     state.totalPhases = state.plan.length;
-    state.holdsTotal = cfg.stretches * cfg.reps;
+    state.primaryTotal = primaryCount();
     state.lastDash = 0;
     renderRepGrid();
     renderDistBar();
@@ -497,7 +635,6 @@
     ensureAudio();
     preloadVoice();
     if (cfg.music) startMusic();
-    // show live volume control on run screen when music is on
     if (runVol) { runVol.hidden = !cfg.music; if (runVolSlider) runVolSlider.value = cfg.volume; if (runVolVal) runVolVal.textContent = Math.round(cfg.volume * 100) + '%'; }
     requestWakeLock();
     updateWallClock();
@@ -543,9 +680,13 @@
     state.idx = state.plan.length;
     updateDashboard();
     updateWallClock();
-    const holds = cfg.stretches * cfg.reps;
     const mins = Math.round(totalDuration() / 60);
-    doneStats.textContent = `${holds} holds across ${cfg.stretches} stretch${cfg.stretches > 1 ? 'es' : ''} · about ${mins} min`;
+    if (isBox()) {
+      doneStats.textContent = `${cfg.boxRounds} rounds · ${cfg.boxWork}s work · about ${mins} min`;
+    } else {
+      const holds = cfg.stretches * cfg.reps;
+      doneStats.textContent = `${holds} holds across ${cfg.stretches} stretch${cfg.stretches > 1 ? 'es' : ''} · about ${mins} min`;
+    }
     doneOverlay.classList.add('is-active');
   }
 
@@ -561,6 +702,10 @@
     cfg.rest      = clampInt($('#cfg-rest').value,      0, 120, DEFAULTS.rest);
     cfg.stretches = clampInt($('#cfg-stretches').value, 1,  12, DEFAULTS.stretches);
     cfg.reps      = clampInt($('#cfg-reps').value,      1,  20, DEFAULTS.reps);
+    cfg.boxRounds = clampInt($('#cfg-box-rounds').value, 1,  12, DEFAULTS.boxRounds);
+    cfg.boxWork   = clampInt($('#cfg-box-work').value,  10, 300, DEFAULTS.boxWork);
+    cfg.boxRest   = clampInt($('#cfg-box-rest').value,   0, 120, DEFAULTS.boxRest);
+    cfg.boxCombos = clampInt($('#cfg-box-combos').value, 0,  30, DEFAULTS.boxCombos);
     cfg.voice     = $('#opt-voice').checked;
     cfg.beeps     = $('#opt-beeps').checked;
     cfg.vibrate   = $('#opt-vibrate').checked;
@@ -571,28 +716,42 @@
     $('#cfg-hold').value = cfg.hold; $('#cfg-recover').value = cfg.recover;
     $('#cfg-rest').value = cfg.rest; $('#cfg-stretches').value = cfg.stretches;
     $('#cfg-reps').value = cfg.reps;
+    $('#cfg-box-rounds').value = cfg.boxRounds; $('#cfg-box-work').value = cfg.boxWork;
+    $('#cfg-box-rest').value = cfg.boxRest; $('#cfg-box-combos').value = cfg.boxCombos;
     $('#opt-voice').checked = cfg.voice; $('#opt-beeps').checked = cfg.beeps;
     $('#opt-vibrate').checked = cfg.vibrate; $('#opt-music').checked = cfg.music;
     volSlider.value = cfg.volume; updateVolLabel(); toggleVolRow();
   }
   function updateSummary() {
-    const hold = clampInt($('#cfg-hold').value, 5, 300, DEFAULTS.hold);
-    const recover = clampInt($('#cfg-recover').value, 1, 60, DEFAULTS.recover);
-    const rest = clampInt($('#cfg-rest').value, 0, 120, DEFAULTS.rest);
-    const stretches = clampInt($('#cfg-stretches').value, 1, 12, DEFAULTS.stretches);
-    const reps = clampInt($('#cfg-reps').value, 1, 20, DEFAULTS.reps);
-    const holds = stretches * reps;
-    const recCount = Math.max(0, holds - 1);
-    const restCount = rest > 0 ? recCount : 0;
-    const total = holds * hold + recCount * recover + restCount * rest;
-    const mins = Math.floor(total / 60), secs = total % 60;
-    const dur = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-    summaryEl.innerHTML = `<b>${holds}</b> holds · <b>${stretches}</b> stretch${stretches > 1 ? 'es' : ''} · <b>${reps}</b> round${reps > 1 ? 's' : ''} each · about <b>${dur}</b>`;
+    if (isBox()) {
+      const rounds = clampInt($('#cfg-box-rounds').value, 1, 12, DEFAULTS.boxRounds);
+      const work = clampInt($('#cfg-box-work').value, 10, 300, DEFAULTS.boxWork);
+      const rest = clampInt($('#cfg-box-rest').value, 0, 120, DEFAULTS.boxRest);
+      const restCount = rest > 0 ? Math.max(0, rounds - 1) : 0;
+      const total = rounds * work + restCount * rest;
+      const mins = Math.floor(total / 60), secs = total % 60;
+      const dur = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+      const combos = clampInt($('#cfg-box-combos').value, 0, 30, DEFAULTS.boxCombos);
+      const comboTxt = combos > 0 ? ` · combos every ${combos}s` : '';
+      summaryEl.innerHTML = `<b>${rounds}</b> rounds · <b>${work}s</b> work · <b>${rest}s</b> rest${comboTxt} · about <b>${dur}</b>`;
+    } else {
+      const hold = clampInt($('#cfg-hold').value, 5, 300, DEFAULTS.hold);
+      const recover = clampInt($('#cfg-recover').value, 1, 60, DEFAULTS.recover);
+      const rest = clampInt($('#cfg-rest').value, 0, 120, DEFAULTS.rest);
+      const stretches = clampInt($('#cfg-stretches').value, 1, 12, DEFAULTS.stretches);
+      const reps = clampInt($('#cfg-reps').value, 1, 20, DEFAULTS.reps);
+      const holds = stretches * reps;
+      const recCount = Math.max(0, holds - 1);
+      const restCount = rest > 0 ? recCount : 0;
+      const total = holds * hold + recCount * recover + restCount * rest;
+      const mins = Math.floor(total / 60), secs = total % 60;
+      const dur = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+      summaryEl.innerHTML = `<b>${holds}</b> holds · <b>${stretches}</b> stretch${stretches > 1 ? 'es' : ''} · <b>${reps}</b> round${reps > 1 ? 's' : ''} each · about <b>${dur}</b>`;
+    }
   }
   function updateVolLabel() { volVal.textContent = Math.round(parseFloat(volSlider.value) * 100) + '%'; }
   function toggleVolRow() { volRow.hidden = !$('#opt-music').checked; }
 
-  // Keep config + run-screen volume sliders in sync; apply live to music.
   function applyVolume(v) {
     v = Math.max(0, Math.min(1, v));
     cfg.volume = v;
@@ -625,6 +784,15 @@
     });
   });
 
+  // mode switch
+  document.querySelectorAll('.mode-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (state.running) return;  // no mode switch mid-session
+      setMode(btn.dataset.mode);
+      beep(660, 0.05);
+    });
+  });
+
   startBtn.addEventListener('click', start);
   pauseBtn.addEventListener('click', () => (state.paused ? resume() : pause()));
   skipBtn.addEventListener('click', skip);
@@ -634,7 +802,8 @@
   $('#opt-music').addEventListener('change', () => { toggleVolRow(); saveSettings(); });
   volSlider.addEventListener('input', () => applyVolume(parseFloat(volSlider.value)));
   if (runVolSlider) runVolSlider.addEventListener('input', () => applyVolume(parseFloat(runVolSlider.value)));
-  ['cfg-hold', 'cfg-recover', 'cfg-rest', 'cfg-stretches', 'cfg-reps'].forEach((id) =>
+  ['cfg-hold', 'cfg-recover', 'cfg-rest', 'cfg-stretches', 'cfg-reps',
+   'cfg-box-rounds', 'cfg-box-work', 'cfg-box-rest', 'cfg-box-combos'].forEach((id) =>
     document.getElementById(id).addEventListener('input', () => { updateSummary(); saveSettings(); }));
   ['opt-voice', 'opt-beeps', 'opt-vibrate'].forEach((id) =>
     document.getElementById(id).addEventListener('change', saveSettings));
@@ -642,5 +811,6 @@
   // ---------- Init ----------
   loadSettings();
   applyConfigToInputs();
+  setMode(cfg.mode);
   updateSummary();
 })();

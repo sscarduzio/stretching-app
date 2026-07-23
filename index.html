@@ -11,9 +11,15 @@
   <link rel="apple-touch-icon" href="icon.svg">
   <link rel="icon" href="icon.svg">
   <link rel="stylesheet" href="style.css">
-  <title>Stretch Timer</title>
+  <title>Stretch & Box Timer</title>
 </head>
-<body data-phase="idle">
+<body data-phase="idle" data-mode="stretch">
+  <!-- mode switch (top right) -->
+  <div class="mode-switch glass" id="mode-switch" role="tablist" aria-label="Workout mode">
+    <button type="button" class="mode-btn is-active" data-mode="stretch" role="tab" aria-selected="true">🧘 <span>Stretch</span></button>
+    <button type="button" class="mode-btn" data-mode="box" role="tab" aria-selected="false">🥊 <span>Box</span></button>
+  </div>
+
   <!-- animated aurora background -->
   <div class="aurora" aria-hidden="true">
     <span class="orb orb-a"></span>
@@ -25,12 +31,13 @@
   <!-- ============ CONFIG SCREEN ============ -->
   <main id="config-screen" class="screen is-active">
     <header class="brand">
-      <div class="logo-ring"><div class="logo">🧘</div></div>
-      <h1>Stretch<span>.</span></h1>
-      <p class="subtitle">Hold · recover · alternate sides</p>
+      <div class="logo-ring"><div class="logo" id="brand-logo">🧘</div></div>
+      <h1 id="brand-title">Stretch<span>.</span></h1>
+      <p class="subtitle" id="brand-subtitle">Hold · recover · alternate sides</p>
     </header>
 
-    <section class="glass card">
+    <!-- STRETCH config fields -->
+    <section class="glass card" id="stretch-fields">
       <div class="field">
         <label for="cfg-hold">Hold <small>seconds</small></label>
         <div class="stepper">
@@ -73,6 +80,42 @@
           <button type="button" data-target="cfg-reps" data-step="-1">−</button>
           <input id="cfg-reps" type="number" inputmode="numeric" value="10" min="1" max="20" step="1">
           <button type="button" data-target="cfg-reps" data-step="1">+</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOX config fields -->
+    <section class="glass card" id="box-fields" hidden>
+      <div class="field">
+        <label for="cfg-box-rounds">Rounds <small>boxing</small></label>
+        <div class="stepper">
+          <button type="button" data-target="cfg-box-rounds" data-step="-1">−</button>
+          <input id="cfg-box-rounds" type="number" inputmode="numeric" value="6" min="1" max="12" step="1">
+          <button type="button" data-target="cfg-box-rounds" data-step="1">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="cfg-box-work">Work <small>seconds / round</small></label>
+        <div class="stepper">
+          <button type="button" data-target="cfg-box-work" data-step="-5">−</button>
+          <input id="cfg-box-work" type="number" inputmode="numeric" value="60" min="10" max="300" step="5">
+          <button type="button" data-target="cfg-box-work" data-step="5">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="cfg-box-rest">Rest <small>between rounds · 0 = off</small></label>
+        <div class="stepper">
+          <button type="button" data-target="cfg-box-rest" data-step="-5">−</button>
+          <input id="cfg-box-rest" type="number" inputmode="numeric" value="20" min="0" max="120" step="5">
+          <button type="button" data-target="cfg-box-rest" data-step="5">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="cfg-box-combos">Combos <small>seconds apart · 0 = off</small></label>
+        <div class="stepper">
+          <button type="button" data-target="cfg-box-combos" data-step="-1">−</button>
+          <input id="cfg-box-combos" type="number" inputmode="numeric" value="15" min="0" max="30" step="1">
+          <button type="button" data-target="cfg-box-combos" data-step="1">+</button>
         </div>
       </div>
     </section>
@@ -123,8 +166,8 @@
       <svg viewBox="0 0 320 320" class="ring" id="ring-svg" aria-hidden="true">
         <defs>
           <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%"  stop-color="#ff7a7a"/>
-            <stop offset="100%" stop-color="#ff3d6e"/>
+            <stop id="grad-start" offset="0%"  stop-color="#ff7a7a"/>
+            <stop id="grad-end" offset="100%" stop-color="#ff3d6e"/>
           </linearGradient>
         </defs>
         <circle class="ring-bg" cx="160" cy="160" r="140"></circle>
@@ -172,7 +215,7 @@
         </div>
         <div class="stat">
           <span class="stat-val" id="stat-holds">0 / 10</span>
-          <span class="stat-label">holds</span>
+          <span class="stat-label" id="stat-holds-label">holds</span>
         </div>
       </div>
     </section>
@@ -180,7 +223,7 @@
     <!-- repetition grid -->
     <section class="glass dash-card reps-card">
       <div class="card-head">
-        <span class="card-title">Repetitions</span>
+        <span class="card-title" id="rep-title">Repetitions</span>
         <span id="rep-count" class="card-meta">0 / 10</span>
       </div>
       <div class="rep-grid" id="rep-grid"></div>
@@ -195,9 +238,9 @@
         <span class="dist-seg rest" id="dist-rest"></span>
       </div>
       <div class="dist-legend">
-        <span class="lg hold"><i></i>Hold <b id="lg-hold">0s</b></span>
-        <span class="lg recover"><i></i>Recover <b id="lg-recover">0s</b></span>
-        <span class="lg rest"><i></i>Rest <b id="lg-rest">0s</b></span>
+        <span class="lg hold" id="lg-hold-wrap"><i></i><span id="lg-hold-label">Hold</span> <b id="lg-hold">0s</b></span>
+        <span class="lg recover" id="lg-recover-wrap"><i></i>Recover <b id="lg-recover">0s</b></span>
+        <span class="lg rest" id="lg-rest-wrap"><i></i>Rest <b id="lg-rest">0s</b></span>
       </div>
     </section>
 
