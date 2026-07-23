@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0b1020">
+  <meta name="theme-color" content="#05060f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Stretch">
@@ -13,16 +13,24 @@
   <link rel="stylesheet" href="style.css">
   <title>Stretch Timer</title>
 </head>
-<body>
+<body data-phase="idle">
+  <!-- animated aurora background -->
+  <div class="aurora" aria-hidden="true">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+    <span class="orb orb-c"></span>
+    <div class="grain"></div>
+  </div>
+
   <!-- ============ CONFIG SCREEN ============ -->
-  <main id="config-screen" class="screen">
+  <main id="config-screen" class="screen is-active">
     <header class="brand">
-      <div class="logo">🧘</div>
-      <h1>Stretch Timer</h1>
-      <p class="subtitle">Hold &middot; recover &middot; alternate sides</p>
+      <div class="logo-ring"><div class="logo">🧘</div></div>
+      <h1>Stretch<span>.</span></h1>
+      <p class="subtitle">Hold · recover · alternate sides</p>
     </header>
 
-    <section class="card">
+    <section class="glass card">
       <div class="field">
         <label for="cfg-hold">Hold <small>seconds</small></label>
         <div class="stepper">
@@ -69,11 +77,19 @@
       </div>
     </section>
 
-    <section class="card toggles">
-      <label class="toggle"><span>🔊 Voice cues</span><input type="checkbox" id="opt-voice" checked><span class="switch"></span></label>
-      <label class="toggle"><span>⏱️ Countdown beeps</span><input type="checkbox" id="opt-beeps" checked><span class="switch"></span></label>
-      <label class="toggle"><span>📳 Vibration</span><input type="checkbox" id="opt-vibrate" checked><span class="switch"></span></label>
-      <label class="toggle"><span>🎵 Background music</span><input type="checkbox" id="opt-music"><span class="switch"></span></label>
+    <section class="glass card toggles">
+      <div class="field-row">
+        <label class="toggle" for="opt-voice"><span>🔊 Voice cues</span><input type="checkbox" id="opt-voice" checked><span class="switch"></span></label>
+
+        <div class="select-row" id="voice-row">
+          <label for="cfg-voice">Voice</label>
+          <select id="cfg-voice" class="glass-select"></select>
+        </div>
+      </div>
+
+      <label class="toggle" for="opt-beeps"><span>⏱️ Countdown beeps</span><input type="checkbox" id="opt-beeps" checked><span class="switch"></span></label>
+      <label class="toggle" for="opt-vibrate"><span>📳 Vibration</span><input type="checkbox" id="opt-vibrate" checked><span class="switch"></span></label>
+      <label class="toggle" for="opt-music"><span>🎵 Background music</span><input type="checkbox" id="opt-music"><span class="switch"></span></label>
       <div class="vol-row" id="vol-row" hidden>
         <label for="cfg-vol">Volume</label>
         <input id="cfg-vol" type="range" min="0" max="1" step="0.05" value="0.35">
@@ -83,21 +99,28 @@
 
     <p class="summary" id="summary"></p>
 
-    <button id="start-btn" class="primary">Start</button>
-    <p class="hint">Screen stays awake &middot; settings saved on this device</p>
+    <button id="start-btn" class="primary"><span>Start</span></button>
+    <p class="hint">Screen stays awake · saved on this device</p>
   </main>
 
   <!-- ============ RUN SCREEN ============ -->
-  <main id="run-screen" class="screen" hidden>
+  <main id="run-screen" class="screen">
     <div class="run-header">
       <span id="stretch-label" class="chip">Stretch 1 / 1</span>
       <span id="round-label" class="chip">Round 1 / 10</span>
     </div>
 
     <div class="ring-wrap">
-      <svg viewBox="0 0 320 320" class="ring" id="ring-svg">
+      <svg viewBox="0 0 320 320" class="ring" id="ring-svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%"  stop-color="#ff7a7a"/>
+            <stop offset="100%" stop-color="#ff3d6e"/>
+          </linearGradient>
+        </defs>
         <circle class="ring-bg" cx="160" cy="160" r="140"></circle>
-        <circle class="ring-fg" id="ring-fg" cx="160" cy="160" r="140"></circle>
+        <circle class="ring-fg" id="ring-fg" cx="160" cy="160" r="140" pathLength="100"></circle>
+        <circle class="ring-glow" id="ring-glow" cx="160" cy="160" r="140"></circle>
       </svg>
       <div class="ring-center">
         <span id="side-badge" class="side-badge">LEFT</span>
@@ -107,25 +130,23 @@
     </div>
 
     <div class="controls">
-      <button id="pause-btn" class="ctrl">⏸ Pause</button>
-      <button id="skip-btn" class="ctrl">⏭ Skip</button>
-      <button id="stop-btn" class="ctrl danger">⏹ Stop</button>
+      <button id="pause-btn" class="ctrl"><span>⏸ Pause</span></button>
+      <button id="skip-btn" class="ctrl"><span>⏭ Skip</span></button>
+      <button id="stop-btn" class="ctrl danger"><span>⏹ Stop</span></button>
     </div>
   </main>
 
   <!-- ============ DONE OVERLAY ============ -->
-  <div id="done-overlay" class="overlay" hidden>
-    <div class="overlay-card">
+  <div id="done-overlay" class="overlay">
+    <div class="overlay-card glass">
       <div class="done-emoji">🎉</div>
       <h2>All done!</h2>
       <p id="done-stats">Great job. See you next stretch.</p>
-      <button id="done-reset" class="primary">Back to setup</button>
+      <button id="done-reset" class="primary"><span>Back to setup</span></button>
     </div>
   </div>
 
-  <!-- Background music (real track, looped) -->
   <audio id="bg-audio" src="audio/happy-summer-116584.mp3" loop preload="auto"></audio>
-
   <script src="app.js"></script>
 </body>
 </html>
