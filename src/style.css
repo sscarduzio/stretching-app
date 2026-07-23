@@ -416,12 +416,12 @@ body[data-phase="recover"] .rep-dot.done { box-shadow: 0 0 6px rgba(52,211,153,.
 /* ring gradient stops — themed per mode (CSS overrides SVG attr) */
 #grad-start { stop-color: #ff7a7a; }
 #grad-end   { stop-color: #ff3d6e; }
-body[data-mode="box"] #grad-start { stop-color: #ffb84d; }
-body[data-mode="box"] #grad-end   { stop-color: #ff4d3d; }
+body[data-mode="boxe"] #grad-start { stop-color: #ffb84d; }
+body[data-mode="boxe"] #grad-end   { stop-color: #ff4d3d; }
 
 /* box mode hides stretch-only UI (chip + recover legend) */
-body[data-mode="box"] #stretch-label { display: none; }
-body[data-mode="box"] #lg-recover-wrap { display: none; }
+body[data-mode="boxe"] #stretch-label { display: none; }
+body[data-mode="boxe"] #lg-recover-wrap { display: none; }
 
 .mode-switch {
   position: fixed; top: calc(var(--safe-top) + 10px); right: 14px;
@@ -438,7 +438,7 @@ body[data-mode="box"] #lg-recover-wrap { display: none; }
   background: linear-gradient(135deg, #6d8bff, #4f6ae0); color: #fff;
   box-shadow: 0 3px 12px rgba(79,106,224,.4);
 }
-body[data-mode="box"] .mode-btn.is-active {
+body[data-mode="boxe"] .mode-btn.is-active {
   background: linear-gradient(135deg, #ff6b3d, #ff4d3d); color: #fff;
   box-shadow: 0 3px 12px rgba(255,77,61,.4);
 }
@@ -450,49 +450,158 @@ body[data-phase="rest"] .mode-switch,
 body[data-phase="done"] .mode-switch { display: none; }
 
 /* ============================================================
-   BOXING THEME  (body[data-mode="box"])
+   BOXING THEME  (body[data-mode="boxe"])
    ============================================================ */
-body[data-mode="box"] {
+body[data-mode="boxe"] {
   --accent: #ff4d3d;
   --accent-2: #ff8a3d;
 }
-body[data-mode="box"] .aurora {
+body[data-mode="boxe"] .aurora {
   background: radial-gradient(140% 100% at 50% 0%, #1c0a08, var(--bg) 60%);
 }
-body[data-mode="box"] .orb-a { background: radial-gradient(circle at 30% 30%, #ff4d3d, transparent 65%); }
-body[data-mode="box"] .orb-b { background: radial-gradient(circle at 60% 40%, #ff8a3d, transparent 65%); }
-body[data-mode="box"] .orb-c { background: radial-gradient(circle at 50% 50%, #ffcc4d, transparent 65%); }
-body[data-mode="box"] .logo-ring { background: conic-gradient(from 220deg, #ff4d3d, #ff8a3d, #ffcc4d, #ff4d3d); }
-body[data-mode="box"] .brand h1 span { color: var(--accent-2); }
-body[data-mode="box"] .primary {
+body[data-mode="boxe"] .orb-a { background: radial-gradient(circle at 30% 30%, #ff4d3d, transparent 65%); }
+body[data-mode="boxe"] .orb-b { background: radial-gradient(circle at 60% 40%, #ff8a3d, transparent 65%); }
+body[data-mode="boxe"] .orb-c { background: radial-gradient(circle at 50% 50%, #ffcc4d, transparent 65%); }
+body[data-mode="boxe"] .logo-ring { background: conic-gradient(from 220deg, #ff4d3d, #ff8a3d, #ffcc4d, #ff4d3d); }
+body[data-mode="boxe"] .brand h1 span { color: var(--accent-2); }
+body[data-mode="boxe"] .primary {
   background: linear-gradient(135deg, #ff6b3d, #ff4d3d);
   box-shadow: 0 12px 34px rgba(255,77,61,.45), inset 0 1px 0 rgba(255,255,255,.25);
 }
-body[data-mode="box"] .primary:active { box-shadow: 0 6px 20px rgba(255,77,61,.4); }
-body[data-mode="box"] .toggle input:checked + .switch { background: linear-gradient(135deg, var(--accent-2), var(--accent)); }
-body[data-mode="box"] .stepper button:active { box-shadow: 0 0 18px rgba(255,77,61,.4); }
-body[data-mode="box"] .ctrl:active { box-shadow: 0 0 18px rgba(255,77,61,.35); }
+body[data-mode="boxe"] .primary:active { box-shadow: 0 6px 20px rgba(255,77,61,.4); }
+body[data-mode="boxe"] .toggle input:checked + .switch { background: linear-gradient(135deg, var(--accent-2), var(--accent)); }
+body[data-mode="boxe"] .stepper button:active { box-shadow: 0 0 18px rgba(255,77,61,.4); }
+body[data-mode="boxe"] .ctrl:active { box-shadow: 0 0 18px rgba(255,77,61,.35); }
 
 /* boxing phase theming */
-body[data-mode="box"][data-phase="work"] { --accent: #ff4d3d; --accent-2: #ff8a3d; }
-body[data-mode="box"][data-phase="work"] .ring-fg { filter: drop-shadow(0 0 16px rgba(255,77,61,.6)); }
-body[data-mode="box"][data-phase="work"] .ring-glow { animation: breathe 2.4s ease-in-out infinite; }
-body[data-mode="box"][data-phase="rest"] { --accent: #5b8aff; --accent-2: #6d8bff; }
-body[data-mode="box"][data-phase="rest"] .ring-fg { filter: drop-shadow(0 0 16px rgba(91,138,255,.5)); }
-body[data-mode="box"][data-phase="rest"] .ring-glow { animation: breathe 3s ease-in-out infinite; }
+body[data-mode="boxe"][data-phase="work"] { --accent: #ff4d3d; --accent-2: #ff8a3d; }
+body[data-mode="boxe"][data-phase="work"] .ring-fg { filter: drop-shadow(0 0 16px rgba(255,77,61,.6)); }
+body[data-mode="boxe"][data-phase="work"] .ring-glow { animation: breathe 2.4s ease-in-out infinite; }
+body[data-mode="boxe"][data-phase="rest"] { --accent: #5b8aff; --accent-2: #6d8bff; }
+body[data-mode="boxe"][data-phase="rest"] .ring-fg { filter: drop-shadow(0 0 16px rgba(91,138,255,.5)); }
+body[data-mode="boxe"][data-phase="rest"] .ring-glow { animation: breathe 3s ease-in-out infinite; }
 
 /* boxing time-split bar (work = orange/red, rest = blue) */
-body[data-mode="box"] .dist-seg.hold { background: linear-gradient(90deg, #ff8a3d, #ff4d3d); }
-body[data-mode="box"] .dist-seg.rest { background: linear-gradient(90deg, #5b8aff, #6d8bff); }
-body[data-mode="box"] .lg.hold i { background: #ff6b3d; }
-body[data-mode="box"] .lg.rest i { background: #5b8aff; }
+body[data-mode="boxe"] .dist-seg.hold { background: linear-gradient(90deg, #ff8a3d, #ff4d3d); }
+body[data-mode="boxe"] .dist-seg.rest { background: linear-gradient(90deg, #5b8aff, #6d8bff); }
+body[data-mode="boxe"] .lg.hold i { background: #ff6b3d; }
+body[data-mode="boxe"] .lg.rest i { background: #5b8aff; }
 
 /* boxing rep dots (round dots glow orange) */
-body[data-mode="box"] .rep-dot.done {
+body[data-mode="boxe"] .rep-dot.done {
   background: linear-gradient(135deg, var(--accent-2), var(--accent));
   box-shadow: 0 0 6px rgba(255,77,61,.45);
 }
-body[data-mode="box"][data-phase="rest"] .rep-dot.done { box-shadow: 0 0 6px rgba(91,138,255,.4); }
+body[data-mode="boxe"][data-phase="rest"] .rep-dot.done { box-shadow: 0 0 6px rgba(91,138,255,.4); }
 
 /* boxing done overlay accent */
-body[data-mode="box"] .overlay-card h2 { color: var(--accent-2); }
+body[data-mode="boxe"] .overlay-card h2 { color: var(--accent-2); }
+
+/* ============================================================
+   CONFIG RESTRUCTURE — presets · sound chips · advanced
+   ============================================================ */
+
+/* config layout wrapper: single column on phones, 2-col on wide screens */
+.cfg-grid { width: 100%; max-width: 460px; display: flex; flex-direction: column; gap: 18px; align-items: center; }
+.cfg-col { width: 100%; display: flex; flex-direction: column; gap: 18px; align-items: center; }
+
+/* ---------- Preset chips ---------- */
+.preset-row { display: flex; gap: 9px; width: 100%; }
+.preset {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 11px 6px; border-radius: 15px;
+  border: 1px solid var(--stroke); background: var(--glass);
+  color: var(--text); cursor: pointer;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  transition: background .15s, border-color .2s, box-shadow .2s, transform .1s var(--ease);
+}
+.preset:active { transform: scale(.96); }
+.preset b { font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+.preset small { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.preset.on {
+  border-color: color-mix(in srgb, var(--accent-2) 65%, transparent);
+  background: color-mix(in srgb, var(--accent-2) 14%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent-2) 30%, transparent);
+}
+.preset.on small { color: var(--text); opacity: .75; }
+
+/* ---------- Sound chips (voice · beeps · haptics · music) ---------- */
+.sound-chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+.schip {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 4px; border-radius: 13px;
+  border: 1px solid var(--stroke-soft); background: rgba(255,255,255,.035);
+  color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: background .15s, border-color .2s, color .2s, transform .1s var(--ease);
+}
+.schip:active { transform: scale(.94); }
+.schip .ico { font-size: 19px; line-height: 1; filter: grayscale(1); opacity: .5; transition: filter .2s, opacity .2s; }
+.schip.on { color: var(--text); border-color: var(--stroke); background: var(--glass-2); }
+.schip.on .ico { filter: none; opacity: 1; }
+
+/* ---------- Advanced (collapsed by default, native details) ---------- */
+details.advanced summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 15px; font-weight: 700; padding: 3px 0;
+  color: var(--muted); transition: color .2s;
+}
+details.advanced summary::-webkit-details-marker { display: none; }
+details.advanced summary::after {
+  content: "▾"; font-size: 14px; color: var(--muted-2);
+  transition: transform .25s var(--ease);
+}
+details.advanced[open] summary { color: var(--text); }
+details.advanced[open] summary::after { transform: rotate(180deg); }
+details.advanced[open] summary { margin-bottom: 4px; }
+
+/* ---------- "Get ready" phase theme (amber traffic light) ---------- */
+body[data-phase="prepare"] { --accent: #ffc53d; --accent-2: #ffb020; }
+body[data-phase="prepare"] .ring-fg { filter: drop-shadow(0 0 16px rgba(255,197,61,.5)); }
+body[data-phase="prepare"] .ring-glow { animation: breathe 2s ease-in-out infinite; }
+body[data-phase="prepare"] .topbar-live .dot { background: #ffc53d; box-shadow: 0 0 8px #ffc53d; }
+body[data-phase="prepare"] .mode-switch { display: none; }
+
+/* ============================================================
+   WIDE SCREENS (iPad / desktop) — first media queries in the app
+   ============================================================ */
+
+/* config: two columns, presets+fields left, sound+advanced+summary right */
+@media (min-width: 700px) {
+  .cfg-grid {
+    max-width: 860px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    align-items: start; gap: 18px;
+  }
+  .cfg-grid .card { max-width: none; }
+  .summary { margin-top: 2px; }
+}
+
+/* run: ring + next + controls left, dashboard right, bigger digits */
+@media (min-width: 900px) {
+  #run-screen.is-active {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "top  top"
+      "head head"
+      "hero dash"
+      "hero reps"
+      "next dist"
+      "ctrl vol";
+    column-gap: 30px; row-gap: 16px;
+    align-content: start; justify-items: center;
+    padding-left: max(22px, calc(50vw - 490px));
+    padding-right: max(22px, calc(50vw - 490px));
+  }
+  #run-screen .topbar { grid-area: top; max-width: none; }
+  #run-screen .run-header { grid-area: head; max-width: none; }
+  #run-screen .ring-wrap { grid-area: hero; width: min(40vw, 380px); align-self: center; }
+  #run-screen .next-card { grid-area: next; align-self: start; }
+  #run-screen .dash-row { grid-area: dash; }
+  #run-screen .reps-card { grid-area: reps; align-self: start; }
+  #run-screen .dist-card { grid-area: dist; align-self: start; }
+  #run-screen .run-vol { grid-area: vol; align-self: start; }
+  #run-screen .controls { grid-area: ctrl; align-self: end; }
+  .time { font-size: clamp(70px, 9vw, 112px); }
+}

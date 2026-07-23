@@ -31,7 +31,14 @@ All atoms are **loudness-normalized to -16 LUFS** (EBU R128, two-pass `ffmpeg lo
 **Boxe atoms:** `box_round_1..12`, `box_work`, `box_rest`, `box_combo_*` (1-2, 1-2-3, 2-3-2, slip, roll, jab-to-body, double jab, hooks…), `box_count_1..3`, `box_done`.
 
 ### Architecture
-The app is one IIFE (`app.js`) with a `MODES` table that holds all per-mode behavior (plan builder, voice atom names, labels, theme, summary, done text). Adding a third workout mode is an entry in `MODES` plus a plan builder — no scattered mode conditionals. Numeric config fields are declared once in a `FIELDS` schema (id + min + max), which drives `readConfig`/`applyConfigToInputs`; the HTML `min`/`max` attributes match it.
+React + TypeScript + Vite, with [zustand](https://github.com/pmndrs/zustand) for state (settings persisted to localStorage via its `persist` middleware).
+
+- `src/engine.ts` — the drift-free timer loop, kept **outside React**. Mutable per-frame state lives in module locals; anything the UI renders is pushed into the store (ring progress at 60 fps, dashboard throttled to ~4 fps).
+- `src/modes.tsx` — the `MODES` table holds all per-mode behavior (plan builder, config field schema, voice atom names, labels, theme, summary, done text). Adding a third workout mode is an entry here — no scattered mode conditionals.
+- `src/audio.ts` — Web Audio: beeps, the voice-atom bus (compressor chain), background music + procedural pad fallback.
+- `src/store.ts` — settings + session state; components subscribe with selectors.
+- `src/components/` — `ConfigScreen` (fields rendered from the mode's schema), `RunScreen` (dashboard derived from `plan`/`idx`/`elapsed`), `DoneOverlay`.
+- `src/style.css` — the original hand-rolled design system (CSS custom properties, `body[data-mode]`/`body[data-phase]` theming) carried over unchanged.
 
 ## Regenerating the voice
 
@@ -47,8 +54,12 @@ The script is idempotent (skips existing files). Per-theme voice/speed/direction
 
 ```bash
 cd stretching-app
-python3 -m http.server 8080    # visit http://localhost:8080 (or your LAN IP from a phone)
+npm install
+npm run dev        # dev server (add --host to reach it from a phone on your LAN)
+npm run build      # type-check + production build to dist/
 ```
+
+Deploys to GitHub Pages automatically on push to `main` (`.github/workflows/deploy.yml`).
 
 ## Controls
 
@@ -62,10 +73,16 @@ python3 -m http.server 8080    # visit http://localhost:8080 (or your LAN IP fro
 
 ## Config
 
-**Stretch:** Hold · Recovery · Rest between sides · Stretches · Rounds. Defaults: 30 s hold, 5 s recovery, 10 rounds.
-**Boxe:** Rounds · Work sec/round · Rest between · Combo pace. Defaults: 6 rounds, 60 s work, 20 s rest, combos every 15 s.
+One row of trainer-authored **presets** per mode (Stretch: Quick / Daily / Deep · Boxe: Beginner / Classic / HIIT), then only the knobs that matter:
 
-Plus toggles: Voice cues · Countdown beeps · Vibration · Background music (with a live volume slider on both the setup and run screens).
+**Stretch:** Hold (per side) · Stretches (exercises) · Sets (1 set = left + right). Defaults: 30 s × 1 stretch × 5 sets.
+**Boxe:** Rounds · Round length · Rest. Defaults: 6 × 60 s / 20 s.
+
+**Advanced** (collapsed): Side switch time · Rest between stretches (fires only when moving to the next exercise) · Combo pace · **Get ready** — a 10 s amber lead-in before the first phase so you can put the phone down and get into position.
+
+Voice cues announce a phase like a coach — "Round 1, left side… stretch!" — and the phase clock starts when the sentence ends, not while she's talking.
+
+Sound controls are a compact chip row: 🔊 Voice · ⏱ Beeps · 📳 Haptics · 🎵 Music (volume slider on both the setup and run screens).
 
 ## License
 
