@@ -1,0 +1,18 @@
+{
+  "name": "Stretch Timer",
+  "short_name": "Stretch",
+  "description": "Interval stretching timer with voice cues, beeps and haptics. Alternates left/right sides.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

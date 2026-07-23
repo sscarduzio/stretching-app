@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Stretch">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="icon" href="icon.svg">
+  <link rel="stylesheet" href="style.css">
+  <title>Stretch Timer</title>
+</head>
+<body>
+  <!-- ============ CONFIG SCREEN ============ -->
+  <main id="config-screen" class="screen">
+    <header class="brand">
+      <div class="logo">🧘</div>
+      <h1>Stretch Timer</h1>
+      <p class="subtitle">Hold &middot; recover &middot; alternate sides</p>
+    </header>
+
+    <section class="card">
+      <div class="field">
+        <label for="cfg-hold">Hold <small>seconds</small></label>
+        <div class="stepper">
+          <button type="button" data-target="cfg-hold" data-step="-5" aria-label="decrease hold">−</button>
+          <input id="cfg-hold" type="number" inputmode="numeric" value="30" min="5" max="300" step="5">
+          <button type="button" data-target="cfg-hold" data-step="5" aria-label="increase hold">+</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="cfg-recover">Recovery <small>seconds</small></label>
+        <div class="stepper">
+          <button type="button" data-target="cfg-recover" data-step="-1">−</button>
+          <input id="cfg-recover" type="number" inputmode="numeric" value="5" min="1" max="60" step="1">
+          <button type="button" data-target="cfg-recover" data-step="1">+</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="cfg-reps">Rounds</label>
+        <div class="stepper">
+          <button type="button" data-target="cfg-reps" data-step="-1">−</button>
+          <input id="cfg-reps" type="number" inputmode="numeric" value="10" min="1" max="50" step="1">
+          <button type="button" data-target="cfg-reps" data-step="1">+</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card toggles">
+      <label class="toggle"><span>🔊 Voice cues</span><input type="checkbox" id="opt-voice" checked><span class="switch"></span></label>
+      <label class="toggle"><span>⏱️ Countdown beeps</span><input type="checkbox" id="opt-beeps" checked><span class="switch"></span></label>
+      <label class="toggle"><span>📳 Vibration</span><input type="checkbox" id="opt-vibrate" checked><span class="switch"></span></label>
+      <label class="toggle"><span>🎵 Ambient music</span><input type="checkbox" id="opt-music"><span class="switch"></span></label>
+    </section>
+
+    <button id="start-btn" class="primary">Start</button>
+    <p class="hint">Screen stays awake &middot; works offline</p>
+  </main>
+
+  <!-- ============ RUN SCREEN ============ -->
+  <main id="run-screen" class="screen" hidden>
+    <div class="run-header">
+      <span id="round-label" class="round-label">Round 1 / 10</span>
+    </div>
+
+    <div class="ring-wrap">
+      <svg viewBox="0 0 320 320" class="ring" id="ring-svg">
+        <circle class="ring-bg" cx="160" cy="160" r="140"></circle>
+        <circle class="ring-fg" id="ring-fg" cx="160" cy="160" r="140"></circle>
+      </svg>
+      <div class="ring-center">
+        <span id="side-badge" class="side-badge">LEFT</span>
+        <span id="time" class="time">30</span>
+        <span id="phase-label" class="phase-label">STRETCH</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="pause-btn" class="ctrl">⏸ Pause</button>
+      <button id="skip-btn" class="ctrl">⏭ Skip</button>
+      <button id="stop-btn" class="ctrl danger">⏹ Stop</button>
+    </div>
+  </main>
+
+  <!-- ============ DONE OVERLAY ============ -->
+  <div id="done-overlay" class="overlay" hidden>
+    <div class="overlay-card">
+      <div class="done-emoji">🎉</div>
+      <h2>All done!</h2>
+      <p>Great job. See you next stretch.</p>
+      <button id="done-reset" class="primary">Back to setup</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
