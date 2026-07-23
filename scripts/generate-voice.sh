@@ -130,4 +130,13 @@ case "$THEME" in
   *) echo "Usage: $0 [stretch|box|all]" >&2; exit 1 ;;
 esac
 
+# Post-process: normalize all atoms to a consistent loudness (-16 LUFS)
+# so cues are uniform and sit above the background music.
+if command -v ffmpeg >/dev/null 2>&1; then
+  echo
+  bash "$(dirname "$0")/normalize-voice.sh"
+else
+  echo "⚠ ffmpeg not found — skipping loudness normalization" >&2
+fi
+
 echo "Done. $(ls -1 "$OUT" | wc -l | tr -d ' ') files in $OUT/ · $(du -sh "$OUT" | cut -f1)"

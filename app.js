@@ -137,13 +137,22 @@
   const atomCache = new Map();
   const atomLoading = new Map();
   const activeSources = [];
-  let voiceGain = null;
+  let voiceGain = null, voiceComp = null, voiceMakeup = null;
 
+  // Broadcast voice chain: gain → compressor → makeup → destination.
+  // The compressor tames sibilant transients (why some atoms like
+  // "slip" couldn't be normalized louder) so every cue reaches a
+  // uniform perceived level; makeup gain then lifts voice above the
+  // music. Files are pre-normalized to -16 LUFS / -1.5 dBTP.
   function voiceBus() {
     if (!voiceGain) {
-      voiceGain = ensureAudio().createGain();
-      voiceGain.gain.value = 1.0;
-      voiceGain.connect(ensureAudio().destination);
+      const ctx = ensureAudio();
+      voiceGain = ctx.createGain(); voiceGain.gain.value = 1.0;
+      voiceComp = ctx.createDynamicsCompressor();
+      voiceComp.threshold.value = -20; voiceComp.knee.value = 25;
+      voiceComp.ratio.value = 2.5; voiceComp.attack.value = 0.003; voiceComp.release.value = 0.25;
+      voiceMakeup = ctx.createGain(); voiceMakeup.gain.value = 1.3;
+      voiceGain.connect(voiceComp).connect(voiceMakeup).connect(ctx.destination);
     }
     return voiceGain;
   }
