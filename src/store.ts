@@ -102,8 +102,6 @@ export function fmtDur(sec: number): string {
   return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
 }
 
-export function fmtClock(ms: number): string {
-  const d = new Date(ms);
-  const pad = (x: number) => x.toString().padStart(2, '0');
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
+// wall-clock in the user's own time format (12h/24h per locale)
+const clockFmt = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' });
+export const fmtClock = (ms: number): string => clockFmt.format(ms);

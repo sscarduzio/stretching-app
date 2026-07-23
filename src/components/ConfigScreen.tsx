@@ -1,12 +1,14 @@
-import { beep, setMusicVolume } from './../audio';
+import { beep, setMusicVolume } from '../audio';
 import { start } from '../engine';
+import { t } from '../i18n';
 import { MODES, PREPARE_FIELD, type FieldDef, type Preset } from '../modes';
 import { useApp, useSettings, type Settings } from '../store';
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
 function Stepper({ f }: { f: FieldDef }) {
-  const value = useApp((s) => s[f.key] as number);
+  const value = useApp((s) => s[f.key]);
+  const { label, sub } = t.fields[f.key];
   const setVal = (v: number) => useApp.getState().set({ [f.key]: v });
   const bump = (dir: 1 | -1) => {
     setVal(clamp(value + dir * f.step, f.min, f.max));
@@ -15,17 +17,17 @@ function Stepper({ f }: { f: FieldDef }) {
   return (
     <div className="field">
       <label htmlFor={`cfg-${f.key}`}>
-        {f.label} <small>{f.sub}</small>
+        {label} <small>{sub}</small>
       </label>
       <div className="stepper">
-        <button type="button" aria-label={`decrease ${f.label}`} onClick={() => bump(-1)}>−</button>
+        <button type="button" aria-label={t.config.decrease(label)} onClick={() => bump(-1)}>−</button>
         <input
           id={`cfg-${f.key}`} type="number" inputMode="numeric"
           min={f.min} max={f.max} step={f.step} value={value}
           onChange={(e) => setVal(e.target.valueAsNumber || 0)}
           onBlur={(e) => setVal(clamp(e.target.valueAsNumber || f.min, f.min, f.max))}
         />
-        <button type="button" aria-label={`increase ${f.label}`} onClick={() => bump(1)}>+</button>
+        <button type="button" aria-label={t.config.increase(label)} onClick={() => bump(1)}>+</button>
       </div>
     </div>
   );
@@ -40,17 +42,17 @@ function PresetChip({ p, settings }: { p: Preset; settings: Settings }) {
       aria-pressed={active}
       onClick={() => { useApp.getState().set(p.values); beep(660, 0.05); }}
     >
-      <b>{p.name}</b>
+      <b>{t.presets[p.id]}</b>
       <small>{p.sub}</small>
     </button>
   );
 }
 
 const SOUND_CHIPS = [
-  { k: 'voice', icon: '🔊', label: 'Voice' },
-  { k: 'beeps', icon: '⏱️', label: 'Beeps' },
-  { k: 'vibrate', icon: '📳', label: 'Haptics' },
-  { k: 'music', icon: '🎵', label: 'Music' },
+  { k: 'voice', icon: '🔊', label: () => t.config.voice },
+  { k: 'beeps', icon: '⏱️', label: () => t.config.beeps },
+  { k: 'vibrate', icon: '📳', label: () => t.config.haptics },
+  { k: 'music', icon: '🎵', label: () => t.config.music },
 ] as const;
 
 function SoundChip({ k, icon, label }: (typeof SOUND_CHIPS)[number]) {
@@ -62,8 +64,8 @@ function SoundChip({ k, icon, label }: (typeof SOUND_CHIPS)[number]) {
       aria-pressed={on}
       onClick={() => useApp.getState().set({ [k]: !on })}
     >
-      <span className="ico">{icon}</span>
-      <span>{label}</span>
+      <span className="ico" aria-hidden="true">{icon}</span>
+      <span>{label()}</span>
     </button>
   );
 }
@@ -79,6 +81,7 @@ export function VolumeSlider({ id }: { id: string }) {
     <>
       <input
         id={id} type="range" min={0} max={1} step={0.05} value={volume}
+        aria-label={t.config.volume}
         onChange={(e) => apply(e.target.valueAsNumber)}
       />
       <span className="vol-val">{Math.round(volume * 100)}%</span>
@@ -89,18 +92,19 @@ export function VolumeSlider({ id }: { id: string }) {
 export default function ConfigScreen({ active }: { active: boolean }) {
   const settings = useSettings();
   const m = MODES[settings.mode];
+  const brand = t.modes[settings.mode];
   return (
-    <main className={`screen${active ? ' is-active' : ''}`}>
+    <main className={`screen${active ? ' is-active' : ''}`} aria-hidden={!active}>
       <header className="brand">
-        <div className="logo-ring"><div className="logo">{m.brand.logo}</div></div>
-        <h1>{m.brand.title}<span>.</span></h1>
-        <p className="subtitle">{m.brand.subtitle}</p>
+        <div className="logo-ring"><div className="logo">{m.logo}</div></div>
+        <h1>{brand.title}<span>.</span></h1>
+        <p className="subtitle">{brand.subtitle}</p>
       </header>
 
       <div className="cfg-grid">
         <div className="cfg-col">
-          <div className="preset-row" role="group" aria-label="Presets">
-            {m.presets.map((p) => <PresetChip key={p.name} p={p} settings={settings} />)}
+          <div className="preset-row" role="group" aria-label={t.config.presetsAria}>
+            {m.presets.map((p) => <PresetChip key={p.id} p={p} settings={settings} />)}
           </div>
 
           <section className="glass card">
@@ -115,14 +119,14 @@ export default function ConfigScreen({ active }: { active: boolean }) {
             </div>
             {settings.music && (
               <div className="vol-row">
-                <label htmlFor="cfg-vol">Volume</label>
+                <label htmlFor="cfg-vol">{t.config.volume}</label>
                 <VolumeSlider id="cfg-vol" />
               </div>
             )}
           </section>
 
           <details className="glass card advanced">
-            <summary>Advanced</summary>
+            <summary>{t.config.advanced}</summary>
             {m.advanced.map((f) => <Stepper key={f.key} f={f} />)}
             <Stepper f={PREPARE_FIELD} />
           </details>
@@ -131,8 +135,8 @@ export default function ConfigScreen({ active }: { active: boolean }) {
         </div>
       </div>
 
-      <button className="primary" onClick={start}><span>Start</span></button>
-      <p className="hint">Screen stays awake · saved on this device</p>
+      <button className="primary" onClick={start}><span>{t.config.start}</span></button>
+      <p className="hint">{t.config.hint}</p>
     </main>
   );
 }

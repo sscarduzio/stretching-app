@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { beep } from './audio';
+import { t } from './i18n';
 import { MODES } from './modes';
 import { useApp, type ModeKey } from './store';
 import ConfigScreen from './components/ConfigScreen';
@@ -15,7 +16,7 @@ function ModeSwitch() {
     beep(660, 0.05);
   };
   return (
-    <div className="mode-switch glass" role="tablist" aria-label="Workout mode">
+    <div className="mode-switch glass" role="tablist" aria-label={t.config.workoutModeAria}>
       {(Object.keys(MODES) as ModeKey[]).map((m) => (
         <button
           key={m} type="button" role="tab"
@@ -23,7 +24,7 @@ function ModeSwitch() {
           aria-selected={mode === m}
           onClick={() => setMode(m)}
         >
-          {MODES[m].brand.logo} <span>{MODES[m].brand.title}</span>
+          <span aria-hidden="true">{MODES[m].logo}</span> <span>{t.modes[m].title}</span>
         </button>
       ))}
     </div>
@@ -48,7 +49,7 @@ export default function App() {
   // the CSS theming contract: body[data-mode] + body[data-phase]
   useEffect(() => {
     document.body.dataset.mode = mode;
-    document.title = `${MODES[mode].brand.title} · Stretch & Boxe Timer`;
+    document.title = `${t.modes[mode].title} · ${t.appTitle}`;
     document.querySelector('#theme-color-meta')?.setAttribute('content', MODES[mode].themeColor);
   }, [mode]);
 

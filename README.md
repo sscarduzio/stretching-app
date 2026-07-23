@@ -84,6 +84,12 @@ Voice cues announce a phase like a coach — "Round 1, left side… stretch!" �
 
 Sound controls are a compact chip row: 🔊 Voice · ⏱ Beeps · 📳 Haptics · 🎵 Music (volume slider on both the setup and run screens).
 
+## Languages
+
+UI strings live in `src/i18n/` as typed dictionaries — `en.tsx` is the reference, and every other locale is type-checked against it, so a missing or extra key is a compile error. The language is picked from the browser (`navigator.language`), and can be forced with `#/stretch?lang=it` (persisted on the device). Currently: English, Italiano.
+
+Adding a language: copy `src/i18n/en.tsx`, translate the values (plural rules are plain functions — each locale owns its own grammar), register it in `src/i18n/index.ts`. The spoken voice cues are pre-generated audio and stay English until per-locale atoms are generated with `scripts/generate-voice.sh`.
+
 ## License
 
 MIT — do whatever you like.

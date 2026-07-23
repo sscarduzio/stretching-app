@@ -1,8 +1,10 @@
 // MODES table — all per-mode behavior/data. Adding a third workout mode is an
-// entry here (plan builder, voice atoms, labels, config fields) — no scattered
-// mode conditionals anywhere else.
+// entry here (plan builder, voice atoms, config fields) — no scattered mode
+// conditionals anywhere else. All user-facing strings live in src/i18n/.
 import type { ReactNode } from 'react';
 import { loadAtom, playAtom } from './audio';
+import { t } from './i18n';
+import type { Messages } from './i18n/en';
 import { fmtDur, type ModeKey, type Phase, type PhaseType, type Settings } from './store';
 
 export const COMBOS = [
@@ -11,29 +13,28 @@ export const COMBOS = [
   'box_combo_roll', 'box_combo_djab', 'box_combo_hook', 'box_combo_12h',
 ];
 
+// numeric settings that have a config field — also the i18n key for its labels
+export type FieldKey = keyof Messages['fields'];
+
 export interface FieldDef {
-  key: keyof Settings;
-  label: string;
-  sub: string;
+  key: FieldKey;
   min: number;
   max: number;
   step: number;
 }
 
 // shared "get ready" lead-in, rendered in each mode's Advanced section
-export const PREPARE_FIELD: FieldDef = {
-  key: 'prepare', label: 'Get ready', sub: 'lead-in · 0 = off', min: 0, max: 60, step: 5,
-};
+export const PREPARE_FIELD: FieldDef = { key: 'prepare', min: 0, max: 60, step: 5 };
 
 export interface Preset {
-  name: string;
-  sub: string;
+  id: keyof Messages['presets'];
+  sub: string; // locale-neutral (numbers/times only)
   values: Partial<Settings>;
 }
 
 export interface Mode {
   key: ModeKey;
-  brand: { logo: string; title: string; subtitle: string };
+  logo: string;
   themeColor: string;
   primaryType: PhaseType;
   voiceGap: number;
@@ -95,26 +96,26 @@ function buildBoxPlan(cfg: Settings): Phase[] {
 export const MODES: Record<ModeKey, Mode> = {
   stretch: {
     key: 'stretch',
-    brand: { logo: '🧘', title: 'Stretch', subtitle: 'Hold · recover · alternate sides' },
+    logo: '🧘',
     themeColor: '#05060f',
     primaryType: 'hold',
     voiceGap: 0.14,
-    repTitle: 'Holds',
-    distPrimaryLabel: 'Hold',
+    repTitle: t.run.holdsTitle,
+    distPrimaryLabel: t.run.legendHold,
     showStretchChip: true,
     fields: [
-      { key: 'hold', label: 'Hold', sub: 'seconds per side', min: 5, max: 300, step: 5 },
-      { key: 'stretches', label: 'Stretches', sub: 'exercises', min: 1, max: 12, step: 1 },
-      { key: 'sets', label: 'Sets', sub: 'left + right each', min: 1, max: 10, step: 1 },
+      { key: 'hold', min: 5, max: 300, step: 5 },
+      { key: 'stretches', min: 1, max: 12, step: 1 },
+      { key: 'sets', min: 1, max: 10, step: 1 },
     ],
     advanced: [
-      { key: 'recover', label: 'Side switch', sub: 'seconds', min: 1, max: 60, step: 1 },
-      { key: 'rest', label: 'Rest between stretches', sub: '0 = off', min: 0, max: 120, step: 5 },
+      { key: 'recover', min: 1, max: 60, step: 1 },
+      { key: 'rest', min: 0, max: 120, step: 5 },
     ],
     presets: [
-      { name: 'Quick', sub: '20s · 2×2', values: { hold: 20, stretches: 2, sets: 2 } },
-      { name: 'Daily', sub: '30s · 4×2', values: { hold: 30, stretches: 4, sets: 2 } },
-      { name: 'Deep', sub: '45s · 6×3', values: { hold: 45, stretches: 6, sets: 3 } },
+      { id: 'quick', sub: '20s · 2×2', values: { hold: 20, stretches: 2, sets: 2 } },
+      { id: 'daily', sub: '30s · 4×2', values: { hold: 30, stretches: 4, sets: 2 } },
+      { id: 'deep', sub: '45s · 6×3', values: { hold: 45, stretches: 6, sets: 3 } },
     ],
     buildPlan: buildStretchPlan,
     primaryCount: (cfg) => cfg.stretches * cfg.sets * 2,
@@ -130,52 +131,47 @@ export const MODES: Record<ModeKey, Mode> = {
     speakRest: (p) => playAtom(p.nextStretch! > p.stretch! ? 'rest_stretch_' + p.nextStretch : 'rest'),
     speakCount: (n) => playAtom('count_' + n),
     speakDone: () => playAtom('done'),
-    sideBadge: (p) => (p.type === 'hold' ? p.side!.toUpperCase() : p.type === 'recover' ? 'SWITCH' : 'REST'),
-    phaseLabel: (p) => (p.type === 'hold' ? 'HOLD' : p.type === 'recover' ? 'SWITCH' : 'REST'),
+    sideBadge: (p) => (p.type === 'hold' ? t.run[p.side!] : p.type === 'recover' ? t.run.switch : t.run.rest),
+    phaseLabel: (p) => (p.type === 'hold' ? t.run.hold : p.type === 'recover' ? t.run.switch : t.run.rest),
     positionChips: (p, cfg) => ({
-      stretch: `Stretch ${p.stretch} / ${cfg.stretches}`,
-      round: `Set ${p.round} / ${cfg.sets}`,
+      stretch: t.run.stretchChip(p.stretch!, cfg.stretches),
+      round: t.run.setChip(p.round!, cfg.sets),
     }),
     nextCard(next) {
-      if (next.type === 'hold') return { icon: '🤸', text: `${next.side} side · stretch` };
-      if (next.type === 'recover') return { icon: '🔄', text: next.nextStretch! > next.stretch! ? 'Next stretch' : 'Switch sides' };
-      return { icon: '💨', text: 'Rest' };
+      if (next.type === 'hold') return { icon: '🤸', text: t.run.next.holdSide(next.side!) };
+      if (next.type === 'recover') return { icon: '🔄', text: next.nextStretch! > next.stretch! ? t.run.next.nextStretch : t.run.next.switchSides };
+      return { icon: '💨', text: t.run.next.rest };
     },
     summary(cfg) {
       const total = planDuration(buildStretchPlan(cfg)) + cfg.prepare;
-      return (
-        <>
-          <b>{cfg.stretches}</b> stretch{cfg.stretches > 1 ? 'es' : ''} × <b>{cfg.sets}</b> set{cfg.sets > 1 ? 's' : ''} ·{' '}
-          <b>{cfg.hold}s</b> per side · about <b>{fmtDur(total)}</b>
-        </>
-      );
+      return t.summary.stretch(cfg.stretches, cfg.sets, cfg.hold, fmtDur(total));
     },
     doneText(cfg, totalTime) {
-      return `${cfg.stretches * cfg.sets * 2} holds across ${cfg.stretches} stretch${cfg.stretches > 1 ? 'es' : ''} · about ${Math.round(totalTime / 60)} min`;
+      return t.done.stretch(cfg.stretches * cfg.sets * 2, cfg.stretches, Math.round(totalTime / 60));
     },
   },
 
   boxe: {
     key: 'boxe',
-    brand: { logo: '🥊', title: 'Boxe', subtitle: 'Shadow boxe · combos · rounds' },
+    logo: '🥊',
     themeColor: '#100604',
     primaryType: 'work',
     voiceGap: 0.10,
-    repTitle: 'Rounds',
-    distPrimaryLabel: 'Work',
+    repTitle: t.run.roundsTitle,
+    distPrimaryLabel: t.run.legendWork,
     showStretchChip: false,
     fields: [
-      { key: 'boxRounds', label: 'Rounds', sub: 'boxing', min: 1, max: 12, step: 1 },
-      { key: 'boxWork', label: 'Round length', sub: 'seconds', min: 10, max: 300, step: 5 },
-      { key: 'boxRest', label: 'Rest', sub: 'between rounds · 0 = off', min: 0, max: 120, step: 5 },
+      { key: 'boxRounds', min: 1, max: 12, step: 1 },
+      { key: 'boxWork', min: 10, max: 300, step: 5 },
+      { key: 'boxRest', min: 0, max: 120, step: 5 },
     ],
     advanced: [
-      { key: 'boxCombos', label: 'Combo pace', sub: 'seconds apart · 0 = off', min: 0, max: 30, step: 1 },
+      { key: 'boxCombos', min: 0, max: 30, step: 1 },
     ],
     presets: [
-      { name: 'Beginner', sub: '4 × 1:00 / 0:30', values: { boxRounds: 4, boxWork: 60, boxRest: 30, boxCombos: 15 } },
-      { name: 'Classic', sub: '6 × 3:00 / 1:00', values: { boxRounds: 6, boxWork: 180, boxRest: 60, boxCombos: 10 } },
-      { name: 'HIIT', sub: '10 × 0:30 / 0:15', values: { boxRounds: 10, boxWork: 30, boxRest: 15, boxCombos: 7 } },
+      { id: 'beginner', sub: '4 × 1:00 / 0:30', values: { boxRounds: 4, boxWork: 60, boxRest: 30, boxCombos: 15 } },
+      { id: 'classic', sub: '6 × 3:00 / 1:00', values: { boxRounds: 6, boxWork: 180, boxRest: 60, boxCombos: 10 } },
+      { id: 'hiit', sub: '10 × 0:30 / 0:15', values: { boxRounds: 10, boxWork: 30, boxRest: 15, boxCombos: 7 } },
     ],
     buildPlan: buildBoxPlan,
     primaryCount: (cfg) => cfg.boxRounds,
@@ -191,24 +187,19 @@ export const MODES: Record<ModeKey, Mode> = {
     speakRest: () => playAtom('box_rest'),
     speakCount: (n) => playAtom('box_count_' + n),
     speakDone: () => playAtom('box_done'),
-    sideBadge: (p) => (p.type === 'work' ? 'BOXE' : 'REST'),
-    phaseLabel: (p) => (p.type === 'work' ? 'WORK' : 'REST'),
-    positionChips: (p, cfg) => ({ round: `Round ${p.round} / ${cfg.boxRounds}` }),
+    sideBadge: (p) => (p.type === 'work' ? t.run.boxe : t.run.rest),
+    phaseLabel: (p) => (p.type === 'work' ? t.run.work : t.run.rest),
+    positionChips: (p, cfg) => ({ round: t.run.roundChip(p.round!, cfg.boxRounds) }),
     nextCard(next) {
-      if (next.type === 'work') return { icon: '🥊', text: `Round ${next.round} · box` };
-      return { icon: '💧', text: 'Rest' };
+      if (next.type === 'work') return { icon: '🥊', text: t.run.next.round(next.round!) };
+      return { icon: '💧', text: t.run.next.rest };
     },
     summary(cfg) {
       const total = planDuration(buildBoxPlan(cfg)) + cfg.prepare;
-      return (
-        <>
-          <b>{cfg.boxRounds}</b> rounds · <b>{fmtDur(cfg.boxWork)}</b> work · <b>{fmtDur(cfg.boxRest)}</b> rest
-          {cfg.boxCombos > 0 ? ` · combos every ${cfg.boxCombos}s` : ''} · about <b>{fmtDur(total)}</b>
-        </>
-      );
+      return t.summary.boxe(cfg.boxRounds, fmtDur(cfg.boxWork), fmtDur(cfg.boxRest), cfg.boxCombos, fmtDur(total));
     },
     doneText(cfg, totalTime) {
-      return `${cfg.boxRounds} rounds · ${fmtDur(cfg.boxWork)} work · about ${Math.round(totalTime / 60)} min`;
+      return t.done.boxe(cfg.boxRounds, fmtDur(cfg.boxWork), Math.round(totalTime / 60));
     },
   },
 };

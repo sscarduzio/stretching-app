@@ -1,18 +1,31 @@
+import { useEffect, useRef } from 'react';
 import { stop } from '../engine';
+import { t } from '../i18n';
 import { MODES } from '../modes';
-import { useApp } from '../store';
+import { useApp, useSettings } from '../store';
 
 export default function DoneOverlay() {
   const finished = useApp((s) => s.finished);
-  const mode = useApp((s) => MODES[s.mode]);
   const totalTime = useApp((s) => s.totalTime);
+  const settings = useSettings();
+  const mode = MODES[settings.mode];
+  const backBtn = useRef<HTMLButtonElement>(null);
+
+  // move focus into the dialog when it appears
+  useEffect(() => {
+    if (finished) backBtn.current?.focus();
+  }, [finished]);
+
   return (
-    <div className={`overlay${finished ? ' is-active' : ''}`}>
+    <div
+      className={`overlay${finished ? ' is-active' : ''}`}
+      role="dialog" aria-modal="true" aria-labelledby="done-title" aria-hidden={!finished}
+    >
       <div className="overlay-card glass">
-        <div className="done-emoji">{mode.key === 'boxe' ? '🥊' : '🎉'}</div>
-        <h2>All done!</h2>
-        <p>{finished ? mode.doneText(useApp.getState(), totalTime) : ''}</p>
-        <button className="primary" onClick={stop}><span>Back to setup</span></button>
+        <div className="done-emoji" aria-hidden="true">{mode.key === 'boxe' ? '🥊' : '🎉'}</div>
+        <h2 id="done-title">{t.done.title}</h2>
+        <p>{finished ? mode.doneText(settings, totalTime) : ''}</p>
+        <button ref={backBtn} className="primary" onClick={stop}><span>{t.done.back}</span></button>
       </div>
     </div>
   );
