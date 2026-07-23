@@ -27,6 +27,7 @@
     engine: 'system',          // 'system' | 'premium'
     ttsVoice: 'nova',
     ttsModel: 'gpt-4o-mini-tts',
+    ttsSpeed: 0.8,             // speech speed multiplier (0.7 calm – 1.0 normal)
     apiKey: '',
     beeps: true, vibrate: true, music: false, volume: 0.35,
   };
@@ -40,8 +41,15 @@
   ];
 
   // Voice direction for gpt-4o-mini-tts / gpt-4o-tts (ignored by tts-1*).
+  // Explicit, vivid steering: the model responds to concrete descriptions
+  // of pace, breath, pauses and mood — not just the word "calm".
   const TTS_INSTRUCTIONS =
-    'Speak in a calm, warm, encouraging tone at a measured pace, like a friendly yoga instructor guiding a stretch.';
+    'You are a calm, soothing yoga and meditation instructor. ' +
+    'Speak very slowly and gently, with a warm, relaxed, unhurried tone. ' +
+    'Breathe softly between phrases and let each word linger. ' +
+    'Pause briefly after every sentence. Never rush. ' +
+    'Keep a peaceful, comforting, spa-like pace throughout, ' +
+    'as if gently guiding someone through a slow stretch.';
 
   // ---------- State ----------
   const state = {
@@ -80,6 +88,7 @@
   const premiumPanel = $('#premium-panel');
   const ttsVoiceSelect = $('#cfg-tts-voice');
   const ttsModelSelect = $('#cfg-tts-model');
+  const ttsSpeedSelect = $('#cfg-tts-speed');
   const apiKeyInput = $('#cfg-api-key');
   const testVoiceBtn = $('#test-voice-btn');
   const ttsStatus = $('#tts-status');
@@ -139,8 +148,13 @@
     decoded: new Map(),    // key -> AudioBuffer
   };
 
+  // Compact hash so the cache key reflects instructions + speed —
+  // changing either invalidates the cache and regenerates with the new voice.
+  function strHash(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+
   function ttsKey(text) {
-    return `${cfg.ttsModel}|${cfg.ttsVoice}|${text}`;
+    const instr = cfg.ttsModel.startsWith('gpt-4o') ? strHash(TTS_INSTRUCTIONS) : 'none';
+    return `${cfg.ttsModel}|${cfg.ttsVoice}|${cfg.ttsSpeed}|${instr}|${text}`;
   }
 
   // --- IndexedDB helpers (promise-wrapped) ---
@@ -187,6 +201,7 @@
       voice: cfg.ttsVoice,
       input: text,
       response_format: 'mp3',
+      speed: cfg.ttsSpeed,            // slows delivery (0.8 = noticeably calmer)
     };
     if (cfg.ttsModel.startsWith('gpt-4o')) body.instructions = TTS_INSTRUCTIONS;
     const res = await fetch(OPENAI_ENDPOINT, {
@@ -696,6 +711,7 @@
     cfg.engine    = document.querySelector('.seg.is-active')?.dataset.engine || 'system';
     cfg.ttsVoice  = ttsVoiceSelect.value;
     cfg.ttsModel  = ttsModelSelect.value;
+    cfg.ttsSpeed  = parseFloat(ttsSpeedSelect.value) || 1;
     cfg.apiKey    = apiKeyInput.value;
     cfg.beeps     = $('#opt-beeps').checked;
     cfg.vibrate   = $('#opt-vibrate').checked;
@@ -713,6 +729,7 @@
     document.querySelectorAll('.seg').forEach(b => b.classList.toggle('is-active', b.dataset.engine === cfg.engine));
     ttsVoiceSelect.value = cfg.ttsVoice;
     ttsModelSelect.value = cfg.ttsModel;
+    ttsSpeedSelect.value = cfg.ttsSpeed;
     apiKeyInput.value = cfg.apiKey;
     toggleEnginePanels();
   }
@@ -781,7 +798,7 @@
     if (f) { chosenVoice = f; cfg.voiceURI = f.voiceURI; }
     saveSettings();
   });
-  [ttsVoiceSelect, ttsModelSelect, apiKeyInput].forEach((el) =>
+  [ttsVoiceSelect, ttsModelSelect, ttsSpeedSelect, apiKeyInput].forEach((el) =>
     el.addEventListener('change', () => { readConfig(); saveSettings(); }));
   apiKeyInput.addEventListener('input', () => { cfg.apiKey = apiKeyInput.value; saveSettings(); });
 

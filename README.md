@@ -78,8 +78,10 @@ The session is compiled into a **plan** (an array of `hold` / `recover` / `rest`
 ### Using Premium (OpenAI)
 
 1. Get an API key at https://platform.openai.com/api-keys (a few dollars of credit lasts effectively forever for this app).
-2. In the app: Voice engine → **Premium**, paste the key, pick a voice (Nova / Coral / Sage / Echo…), model `gpt-4o-mini-tts`.
+2. In the app: Voice engine → **Premium**, paste the key, pick a voice (Nova / Coral / Sage / Echo…), model `gpt-4o-mini-tts`, and a **Pace** (Calm 0.8× by default — slow, soothing yoga-instructor delivery).
 3. Tap **▶ Test voice** to verify.
+
+The voice is steered two ways for a calm result: a `speed` multiplier (0.7–1.0) and, on gpt-4o models, an `instructions` prompt describing a slow, soothing, breathy yoga-instructor tone. The pace and instructions are part of the cache key, so changing either regenerates the clips with the new delivery.
 
 The key is stored only in your browser's `localStorage` and is sent **only** to `api.openai.com`. It is never committed to the repo. Because every spoken phrase is cached in IndexedDB, you pay for each unique phrase only once — subsequent sessions are instant and free.
 
