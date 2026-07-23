@@ -147,11 +147,27 @@
 
   <!-- ============ RUN SCREEN ============ -->
   <main id="run-screen" class="screen">
+    <!-- topbar: wall clock · live · ETA -->
+    <div class="topbar">
+      <div class="topbar-item">
+        <span class="topbar-val" id="wall-clock">--:--</span>
+        <span class="topbar-label">now</span>
+      </div>
+      <div class="topbar-live" id="live-pulse"><span class="dot"></span>LIVE</div>
+      <div class="topbar-item right">
+        <span class="topbar-val" id="eta-time">--:--</span>
+        <span class="topbar-label">ends ~</span>
+      </div>
+    </div>
+
+    <!-- position chips -->
     <div class="run-header">
       <span id="stretch-label" class="chip">Stretch 1 / 1</span>
       <span id="round-label" class="chip">Round 1 / 10</span>
+      <span id="phase-step" class="chip">Phase 1 / 29</span>
     </div>
 
+    <!-- HERO: current-phase countdown -->
     <div class="ring-wrap">
       <svg viewBox="0 0 320 320" class="ring" id="ring-svg" aria-hidden="true">
         <defs>
@@ -170,6 +186,69 @@
         <span id="phase-label" class="phase-label">STRETCH</span>
       </div>
     </div>
+
+    <!-- NEXT UP -->
+    <div class="next-card glass" id="next-card">
+      <span class="next-kicker">UP NEXT</span>
+      <span class="next-body"><span id="next-icon" class="next-icon">⏭</span><span id="next-text" class="next-text">Recover · Switch</span></span>
+      <span class="next-dur" id="next-dur">5s</span>
+    </div>
+
+    <!-- overall completion donut + key stats -->
+    <section class="dash-row">
+      <div class="glass dash-card overall-card">
+        <span class="card-title">Session</span>
+        <div class="overall-body">
+          <svg viewBox="0 0 120 120" class="mini-donut" aria-hidden="true">
+            <circle class="md-bg" cx="60" cy="60" r="52" pathLength="100"></circle>
+            <circle class="md-fg" id="overall-donut" cx="60" cy="60" r="52" pathLength="100"></circle>
+          </svg>
+          <div class="overall-center">
+            <span id="overall-pct" class="overall-pct">0%</span>
+            <span class="overall-sub">complete</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass dash-card stat-stack">
+        <div class="stat">
+          <span class="stat-val" id="stat-elapsed">0:00</span>
+          <span class="stat-label">elapsed</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val" id="stat-remaining">0:00</span>
+          <span class="stat-label">remaining</span>
+        </div>
+        <div class="stat">
+          <span class="stat-val" id="stat-holds">0 / 10</span>
+          <span class="stat-label">holds</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- repetition grid -->
+    <section class="glass dash-card reps-card">
+      <div class="card-head">
+        <span class="card-title">Repetitions</span>
+        <span id="rep-count" class="card-meta">0 / 10</span>
+      </div>
+      <div class="rep-grid" id="rep-grid"></div>
+    </section>
+
+    <!-- time split gauge -->
+    <section class="glass dash-card dist-card">
+      <div class="card-head"><span class="card-title">Time split</span></div>
+      <div class="dist-bar" id="dist-bar">
+        <span class="dist-seg hold" id="dist-hold"></span>
+        <span class="dist-seg recover" id="dist-recover"></span>
+        <span class="dist-seg rest" id="dist-rest"></span>
+      </div>
+      <div class="dist-legend">
+        <span class="lg hold"><i></i>Hold <b id="lg-hold">0s</b></span>
+        <span class="lg recover"><i></i>Recover <b id="lg-recover">0s</b></span>
+        <span class="lg rest"><i></i>Rest <b id="lg-rest">0s</b></span>
+      </div>
+    </section>
 
     <div class="controls">
       <button id="pause-btn" class="ctrl"><span>⏸ Pause</span></button>

@@ -49,6 +49,8 @@
     plan: [], idx: 0,
     phaseStart: 0, pauseAt: 0,
     raf: 0, lastCount: -1, lastDisplay: -1,
+    startedAt: 0, totalTime: 0, totalPhases: 0, holdsTotal: 0,
+    clockTimer: 0, lastDash: 0,
   };
 
   // ---------- DOM ----------
@@ -81,6 +83,27 @@
   const apiKeyInput = $('#cfg-api-key');
   const testVoiceBtn = $('#test-voice-btn');
   const ttsStatus = $('#tts-status');
+
+  // Dashboard refs
+  const wallClock = $('#wall-clock');
+  const etaTime = $('#eta-time');
+  const phaseStep = $('#phase-step');
+  const nextIcon = $('#next-icon');
+  const nextText = $('#next-text');
+  const nextDur = $('#next-dur');
+  const overallDonut = $('#overall-donut');
+  const overallPct = $('#overall-pct');
+  const statElapsed = $('#stat-elapsed');
+  const statRemaining = $('#stat-remaining');
+  const statHolds = $('#stat-holds');
+  const repGrid = $('#rep-grid');
+  const repCount = $('#rep-count');
+  const distHold = $('#dist-hold');
+  const distRecover = $('#dist-recover');
+  const distRest = $('#dist-rest');
+  const lgHold = $('#lg-hold');
+  const lgRecover = $('#lg-recover');
+  const lgRest = $('#lg-rest');
 
   const RING_LEN = 100;
   ringFg.style.strokeDasharray = RING_LEN;
@@ -395,6 +418,122 @@
     return [...new Set(out)];
   }
 
+  // ---------- Dashboard helpers ----------
+  function fmtClock(ms) {
+    const d = new Date(ms);
+    const h = d.getHours();
+    const m = d.getMinutes().toString().padStart(2, '0');
+    return `${h}:${m}`;
+  }
+  function fmtDur(sec) {
+    sec = Math.max(0, Math.round(sec));
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    if (h > 0) return `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    return `${m}:${s.toString().padStart(2,'0')}`;
+  }
+  function holdsBeforeIdx(i) {
+    let n = 0;
+    for (let k = 0; k < i; k++) if (state.plan[k].type === 'hold') n++;
+    return n;
+  }
+  function elapsedTotal() {
+    let done = 0;
+    for (let k = 0; k < state.idx; k++) done += state.plan[k].duration;
+    const cur = state.paused ? 0 : (performance.now() - state.phaseStart) / 1000;
+    const p = state.plan[state.idx];
+    done += p ? Math.min(cur, p.duration) : 0;
+    return done;
+  }
+
+  function renderRepGrid() {
+    repGrid.innerHTML = '';
+    if (cfg.stretches === 1) {
+      const row = document.createElement('div'); row.className = 'rep-dots';
+      for (let i = 0; i < cfg.reps; i++) {
+        const dot = document.createElement('span'); dot.className = 'rep-dot'; dot.dataset.i = i; row.appendChild(dot);
+      }
+      const wrap = document.createElement('div'); wrap.className = 'rep-group'; wrap.appendChild(row);
+      repGrid.appendChild(wrap);
+    } else {
+      let n = 0;
+      for (let s = 1; s <= cfg.stretches; s++) {
+        const group = document.createElement('div'); group.className = 'rep-group';
+        const lbl = document.createElement('span'); lbl.className = 'rep-group-label'; lbl.textContent = 'S' + s;
+        const dots = document.createElement('div'); dots.className = 'rep-dots';
+        for (let r = 0; r < cfg.reps; r++) {
+          const dot = document.createElement('span'); dot.className = 'rep-dot'; dot.dataset.i = n++; dots.appendChild(dot);
+        }
+        group.appendChild(lbl); group.appendChild(dots); repGrid.appendChild(group);
+      }
+    }
+  }
+  function updateRepGrid() {
+    const doneCount = holdsBeforeIdx(state.idx);
+    const curIsHold = state.plan[state.idx]?.type === 'hold';
+    const currentN = curIsHold ? doneCount : -1;
+    repGrid.querySelectorAll('.rep-dot').forEach((dot) => {
+      const i = +dot.dataset.i;
+      dot.classList.toggle('done', i < doneCount);
+      dot.classList.toggle('current', i === currentN);
+    });
+  }
+
+  function renderDistBar() {
+    const plan = state.plan.length ? state.plan : buildPlan();
+    let h = 0, rec = 0, rest = 0;
+    for (const p of plan) {
+      if (p.type === 'hold') h += p.duration;
+      else if (p.type === 'recover') rec += p.duration;
+      else if (p.type === 'rest') rest += p.duration;
+    }
+    const total = h + rec + rest || 1;
+    distHold.style.width = (h / total * 100) + '%';
+    distRecover.style.width = (rec / total * 100) + '%';
+    distRest.style.width = (rest / total * 100) + '%';
+    lgHold.textContent = fmtDur(h);
+    lgRecover.textContent = fmtDur(rec);
+    lgRest.textContent = fmtDur(rest);
+  }
+
+  function updateNextCard() {
+    const next = state.plan[state.idx + 1];
+    if (!next) {
+      nextIcon.textContent = '🎉'; nextText.textContent = 'Finish'; nextDur.textContent = '';
+      return;
+    }
+    if (next.type === 'hold') {
+      nextIcon.textContent = '🤸'; nextText.textContent = `${next.side} side · stretch`;
+    } else if (next.type === 'recover') {
+      nextIcon.textContent = '🔄'; nextText.textContent = next.nextStretch > next.stretch ? 'Next stretch' : 'Switch sides';
+    } else if (next.type === 'rest') {
+      nextIcon.textContent = '💨'; nextText.textContent = 'Rest';
+    }
+    nextDur.textContent = next.duration + 's';
+  }
+
+  function updateDashboard() {
+    const elapsed = elapsedTotal();
+    const remaining = state.totalTime - elapsed;
+    const pct = state.totalTime > 0 ? elapsed / state.totalTime : 0;
+    overallPct.textContent = Math.round(pct * 100) + '%';
+    overallDonut.style.strokeDashoffset = (100 * (1 - pct)).toFixed(2);
+    statElapsed.textContent = fmtDur(elapsed);
+    statRemaining.textContent = fmtDur(remaining);
+    const doneHolds = holdsBeforeIdx(state.idx);
+    statHolds.textContent = `${doneHolds} / ${state.holdsTotal}`;
+    repCount.textContent = `${doneHolds} / ${state.holdsTotal}`;
+    phaseStep.textContent = `Phase ${Math.min(state.idx + 1, state.totalPhases)} / ${state.totalPhases}`;
+    updateRepGrid();
+  }
+
+  function updateWallClock() {
+    wallClock.textContent = fmtClock(Date.now());
+    const remaining = state.totalTime - elapsedTotal();
+    etaTime.textContent = fmtClock(Date.now() + remaining * 1000);
+  }
+
   // ---------- Phase ----------
   function setPhaseTheme(phase) { document.body.dataset.phase = phase; }
   function currentPhase() { return state.plan[state.idx]; }
@@ -424,6 +563,8 @@
     }
     stretchLabel.textContent = `Stretch ${p.stretch} / ${cfg.stretches}`;
     roundLabel.textContent = `Round ${p.round} / ${cfg.reps}`;
+    updateNextCard();
+    updateDashboard();
     state.raf = requestAnimationFrame(tick);
   }
 
@@ -450,6 +591,10 @@
     const progress = Math.min(1, elapsed / p.duration);
     ringFg.style.strokeDashoffset = RING_LEN * progress;
 
+    // dashboard updates throttled to ~4fps (ring + countdown stay at 60fps)
+    const nowMs = performance.now();
+    if (nowMs - state.lastDash > 240) { state.lastDash = nowMs; updateDashboard(); }
+
     if (remaining > 0 && remaining <= 3.05) {
       const count = Math.ceil(remaining);
       if (count !== state.lastCount && count >= 1 && count <= 3) {
@@ -473,11 +618,21 @@
     readConfig(); saveSettings();
     state.plan = buildPlan(); state.idx = 0;
     state.running = true; state.paused = false;
+    state.startedAt = Date.now();
+    state.totalTime = totalDuration();
+    state.totalPhases = state.plan.length;
+    state.holdsTotal = cfg.stretches * cfg.reps;
+    state.lastDash = 0;
+    renderRepGrid();
+    renderDistBar();
     doneOverlay.classList.remove('is-active');
     showScreen(runScreen);
     ensureAudio();
     if (cfg.music) startMusic();
     requestWakeLock();
+    updateWallClock();
+    clearInterval(state.clockTimer);
+    state.clockTimer = setInterval(updateWallClock, 1000);
     startPhase();
     // Pre-warm premium voice cache for the whole session (async, non-blocking)
     if (premiumReady()) prefetchPhrases(planPhrases()).catch(() => {});
@@ -501,6 +656,7 @@
   function stop() {
     state.running = false; state.paused = false;
     cancelAnimationFrame(state.raf);
+    clearInterval(state.clockTimer);
     stopMusic(); releaseWakeLock();
     setPhaseTheme('idle');
     showScreen(cfgScreen);
@@ -509,10 +665,14 @@
   function finish() {
     state.running = false;
     cancelAnimationFrame(state.raf);
+    clearInterval(state.clockTimer);
     speak('All done. Great job.');
     haptic([300, 80, 300, 80, 500]);
     stopMusic(); releaseWakeLock();
     setPhaseTheme('done');
+    state.idx = state.plan.length;
+    updateDashboard();
+    updateWallClock();
     const holds = cfg.stretches * cfg.reps;
     const mins = Math.round(totalDuration() / 60);
     doneStats.textContent = `${holds} holds across ${cfg.stretches} stretch${cfg.stretches > 1 ? 'es' : ''} · about ${mins} min`;
