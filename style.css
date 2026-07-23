@@ -67,8 +67,7 @@ html, body {
 
 /* ---------- Screens ---------- */
 .screen {
-  position: relative; z-index: 1;
-  height: 100%;
+  position: fixed; inset: 0; z-index: 1;
   display: flex; flex-direction: column; align-items: center;
   gap: 18px;
   padding: calc(var(--safe-top) + 22px) 22px calc(var(--safe-bottom) + 26px);
@@ -199,6 +198,21 @@ html, body {
 .vol-row input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%;
   background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
 .vol-val { width: 44px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* ---------- In-session volume (run screen) ---------- */
+.run-vol { display: flex; align-items: center; gap: 12px; width: 100%; max-width: 460px; padding: 12px 18px; }
+.run-vol[hidden] { display: none !important; }
+.run-vol-icon { font-size: 18px; }
+.run-vol input[type="range"] { flex: 1; height: 30px; -webkit-appearance: none; appearance: none; background: transparent; }
+.run-vol input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 6px;
+  background: linear-gradient(90deg, var(--recover), rgba(255,255,255,.12)); }
+.run-vol input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none;
+  width: 22px; height: 22px; border-radius: 50%; background: #fff; margin-top: -8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+.run-vol input[type="range"]::-moz-range-track { height: 6px; border-radius: 6px;
+  background: linear-gradient(90deg, var(--recover), rgba(255,255,255,.12)); }
+.run-vol input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
 
 /* ---------- Summary ---------- */
 .summary { margin: 0; max-width: 460px; width: 100%; text-align: center; color: var(--muted); font-size: 14px; line-height: 1.55; }

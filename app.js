@@ -54,6 +54,9 @@
   const volRow = $('#vol-row');
   const volSlider = $('#cfg-vol');
   const volVal = $('#vol-val');
+  const runVol = $('#run-vol');
+  const runVolSlider = $('#run-vol-slider');
+  const runVolVal = $('#run-vol-val');
   const doneStats = $('#done-stats');
   const bgAudio = $('#bg-audio');
 
@@ -494,6 +497,8 @@
     ensureAudio();
     preloadVoice();
     if (cfg.music) startMusic();
+    // show live volume control on run screen when music is on
+    if (runVol) { runVol.hidden = !cfg.music; if (runVolSlider) runVolSlider.value = cfg.volume; if (runVolVal) runVolVal.textContent = Math.round(cfg.volume * 100) + '%'; }
     requestWakeLock();
     updateWallClock();
     clearInterval(state.clockTimer);
@@ -522,6 +527,7 @@
     clearInterval(state.clockTimer);
     cutVoice();
     stopMusic(); releaseWakeLock();
+    if (runVol) runVol.hidden = true;
     setPhaseTheme('idle');
     showScreen(cfgScreen);
     pauseBtn.querySelector('span').textContent = '⏸ Pause';
@@ -586,6 +592,18 @@
   function updateVolLabel() { volVal.textContent = Math.round(parseFloat(volSlider.value) * 100) + '%'; }
   function toggleVolRow() { volRow.hidden = !$('#opt-music').checked; }
 
+  // Keep config + run-screen volume sliders in sync; apply live to music.
+  function applyVolume(v) {
+    v = Math.max(0, Math.min(1, v));
+    cfg.volume = v;
+    if (volSlider) volSlider.value = v;
+    if (runVolSlider) runVolSlider.value = v;
+    if (volVal) volVal.textContent = Math.round(v * 100) + '%';
+    if (runVolVal) runVolVal.textContent = Math.round(v * 100) + '%';
+    setMusicVolume(v);
+    saveSettings();
+  }
+
   // ---------- Persistence ----------
   function saveSettings() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg)); } catch (e) {} }
   function loadSettings() {
@@ -614,7 +632,8 @@
   doneReset.addEventListener('click', () => { doneOverlay.classList.remove('is-active'); stop(); });
 
   $('#opt-music').addEventListener('change', () => { toggleVolRow(); saveSettings(); });
-  volSlider.addEventListener('input', () => { updateVolLabel(); setMusicVolume(parseFloat(volSlider.value)); saveSettings(); });
+  volSlider.addEventListener('input', () => applyVolume(parseFloat(volSlider.value)));
+  if (runVolSlider) runVolSlider.addEventListener('input', () => applyVolume(parseFloat(runVolSlider.value)));
   ['cfg-hold', 'cfg-recover', 'cfg-rest', 'cfg-stretches', 'cfg-reps'].forEach((id) =>
     document.getElementById(id).addEventListener('input', () => { updateSummary(); saveSettings(); }));
   ['opt-voice', 'opt-beeps', 'opt-vibrate'].forEach((id) =>
