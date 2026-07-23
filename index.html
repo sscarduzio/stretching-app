@@ -80,64 +80,6 @@
     <section class="glass card toggles">
       <label class="toggle" for="opt-voice"><span>🔊 Voice cues</span><input type="checkbox" id="opt-voice" checked><span class="switch"></span></label>
 
-      <div class="engine-row">
-        <span class="engine-label">Voice engine</span>
-        <div class="segmented" role="tablist">
-          <button type="button" class="seg is-active" data-engine="system">System</button>
-          <button type="button" class="seg" data-engine="premium">Premium</button>
-        </div>
-      </div>
-
-      <div class="select-row" id="voice-row">
-        <label for="cfg-voice">System voice</label>
-        <select id="cfg-voice" class="glass-select"></select>
-      </div>
-
-      <div class="premium-panel" id="premium-panel" hidden>
-        <div class="select-row">
-          <label for="cfg-tts-voice">OpenAI voice</label>
-          <select id="cfg-tts-voice" class="glass-select">
-            <option value="nova">Nova · warm female</option>
-            <option value="coral">Coral · warm female</option>
-            <option value="sage">Sage · calm female</option>
-            <option value="shimmer">Shimmer · soft female</option>
-            <option value="ballad">Ballad · gentle</option>
-            <option value="alloy">Alloy · neutral</option>
-            <option value="verse">Verse · neutral</option>
-            <option value="echo">Echo · warm male</option>
-            <option value="ash">Ash · deep male</option>
-            <option value="onyx">Onyx · deep male</option>
-            <option value="fable">Fable · expressive</option>
-          </select>
-        </div>
-        <div class="select-row">
-          <label for="cfg-tts-model">Model</label>
-          <select id="cfg-tts-model" class="glass-select">
-            <option value="gpt-4o-mini-tts">gpt-4o-mini-tts · most natural</option>
-            <option value="tts-1-hd">tts-1-hd · high quality</option>
-            <option value="tts-1">tts-1 · lowest latency</option>
-          </select>
-        </div>
-        <div class="select-row">
-          <label for="cfg-tts-speed">Pace</label>
-          <select id="cfg-tts-speed" class="glass-select">
-            <option value="0.7">Very slow · 0.7×</option>
-            <option value="0.8">Calm · 0.8×</option>
-            <option value="0.9">Relaxed · 0.9×</option>
-            <option value="1">Normal · 1.0×</option>
-          </select>
-        </div>
-        <div class="key-row">
-          <label for="cfg-api-key">OpenAI API key</label>
-          <input id="cfg-api-key" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false">
-        </div>
-        <p class="key-note">🔒 Stored only in this browser. Sent only to api.openai.com. Never committed to the repo.</p>
-        <div class="premium-actions">
-          <button type="button" id="test-voice-btn" class="ctrl small"><span>▶ Test voice</span></button>
-          <span id="tts-status" class="tts-status"></span>
-        </div>
-      </div>
-
       <label class="toggle" for="opt-beeps"><span>⏱️ Countdown beeps</span><input type="checkbox" id="opt-beeps" checked><span class="switch"></span></label>
       <label class="toggle" for="opt-vibrate"><span>📳 Vibration</span><input type="checkbox" id="opt-vibrate" checked><span class="switch"></span></label>
       <label class="toggle" for="opt-music"><span>🎵 Background music</span><input type="checkbox" id="opt-music"><span class="switch"></span></label>

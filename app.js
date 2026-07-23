@@ -2,54 +2,27 @@
   'use strict';
 
   /* ============================================================
-     Stretch Timer  ·  glassy edition + premium OpenAI TTS
+     Stretch Timer  ·  glassy edition
      - performance.now()-driven, drift-free countdown
      - plan engine: hold / recover / rest  (stretches × rounds)
-     - Voice engines:
-         · system  → speechSynthesis (embedded OS voices)
-         · premium → OpenAI gpt-4o-mini-tts neural voices
-            - prefetch all session phrases at Start
-            - IndexedDB cache (generate once, instant forever)
-            - calm "yoga instructor" voice direction
-            - graceful fallback to system voice on any failure
+     - Voice: pre-generated static audio atoms (no API key, no
+       runtime TTS). Cues are decomposed into reusable clips and
+       sequenced with small gaps that read as natural yoga-teacher
+       pauses. Missing atoms fail silently; beeps still fire.
+     - Active-session dashboard: wall clock, ETA, overall donut,
+       stat gauges, rep grid, time-split bar, next-up card
      - Web Audio beeps, haptics, wake lock, real background track
-     - settings persisted to localStorage (API key stays on device)
+     - settings persisted to localStorage
      ============================================================ */
 
-  const STORAGE_KEY = 'stretchTimer.settings.v3';
-  const IDB_NAME = 'stretchTimer.tts';
-  const IDB_STORE = 'clips';
-  const OPENAI_ENDPOINT = 'https://api.openai.com/v1/audio/speech';
+  const STORAGE_KEY = 'stretchTimer.settings.v4';
+  const VOICE_DIR = 'audio/voice/';
 
   const DEFAULTS = {
     hold: 30, recover: 5, rest: 0, stretches: 1, reps: 10,
-    voice: true, voiceURI: null,
-    engine: 'system',          // 'system' | 'premium'
-    ttsVoice: 'nova',
-    ttsModel: 'gpt-4o-mini-tts',
-    ttsSpeed: 0.8,             // speech speed multiplier (0.7 calm – 1.0 normal)
-    apiKey: '',
-    beeps: true, vibrate: true, music: false, volume: 0.35,
+    voice: true, beeps: true, vibrate: true, music: false, volume: 0.35,
   };
   const cfg = { ...DEFAULTS };
-
-  const VOICE_PREFERENCE = [
-    'Ava', 'Evan', 'Aaron', 'Nora', 'Luke', 'Oliver', 'Serena', 'Zoe',
-    'Samantha', 'Allison', 'Susan', 'Daniel', 'Karen', 'Tessa', 'Moira',
-    'Google US English', 'Google UK English Female', 'Microsoft Aria',
-    'Microsoft Jenny', 'Siri',
-  ];
-
-  // Voice direction for gpt-4o-mini-tts / gpt-4o-tts (ignored by tts-1*).
-  // Explicit, vivid steering: the model responds to concrete descriptions
-  // of pace, breath, pauses and mood — not just the word "calm".
-  const TTS_INSTRUCTIONS =
-    'You are a calm, soothing yoga and meditation instructor. ' +
-    'Speak very slowly and gently, with a warm, relaxed, unhurried tone. ' +
-    'Breathe softly between phrases and let each word linger. ' +
-    'Pause briefly after every sentence. Never rush. ' +
-    'Keep a peaceful, comforting, spa-like pace throughout, ' +
-    'as if gently guiding someone through a slow stretch.';
 
   // ---------- State ----------
   const state = {
@@ -83,15 +56,6 @@
   const volVal = $('#vol-val');
   const doneStats = $('#done-stats');
   const bgAudio = $('#bg-audio');
-  const voiceSelect = $('#cfg-voice');
-  const voiceRow = $('#voice-row');
-  const premiumPanel = $('#premium-panel');
-  const ttsVoiceSelect = $('#cfg-tts-voice');
-  const ttsModelSelect = $('#cfg-tts-model');
-  const ttsSpeedSelect = $('#cfg-tts-speed');
-  const apiKeyInput = $('#cfg-api-key');
-  const testVoiceBtn = $('#test-voice-btn');
-  const ttsStatus = $('#tts-status');
 
   // Dashboard refs
   const wallClock = $('#wall-clock');
@@ -140,203 +104,82 @@
   function haptic(p) { if (cfg.vibrate) try { navigator.vibrate(p); } catch (e) {} }
 
   // ============================================================
-  //  Premium TTS engine (OpenAI) + IndexedDB cache
+  //  Voice — static audio atoms, sequenced with natural gaps
   // ============================================================
-  const tts = {
-    mem: new Map(),        // key -> ArrayBuffer
-    inflight: new Map(),   // key -> Promise<ArrayBuffer>
-    decoded: new Map(),    // key -> AudioBuffer
-  };
+  const atomCache = new Map();    // name -> AudioBuffer
+  const atomLoading = new Map();  // name -> Promise<AudioBuffer>
+  const ATOM_GAP = 0.14;          // seconds between atoms (yoga-teacher pause)
 
-  // Compact hash so the cache key reflects instructions + speed —
-  // changing either invalidates the cache and regenerates with the new voice.
-  function strHash(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
-
-  function ttsKey(text) {
-    const instr = cfg.ttsModel.startsWith('gpt-4o') ? strHash(TTS_INSTRUCTIONS) : 'none';
-    return `${cfg.ttsModel}|${cfg.ttsVoice}|${cfg.ttsSpeed}|${instr}|${text}`;
-  }
-
-  // --- IndexedDB helpers (promise-wrapped) ---
-  function idbOpen() {
-    return new Promise((resolve, reject) => {
-      const req = indexedDB.open(IDB_NAME, 1);
-      req.onupgradeneeded = () => { req.result.createObjectStore(IDB_STORE); };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-  }
-  let _idb = null;
-  async function idb() { if (!_idb) _idb = await idbOpen(); return _idb; }
-  function idbGet(key) {
-    return new Promise(async (resolve) => {
-      try {
-        const db = await idb();
-        const tx = db.transaction(IDB_STORE, 'readonly');
-        const req = tx.objectStore(IDB_STORE).get(key);
-        req.onsuccess = () => resolve(req.result || null);
-        req.onerror = () => resolve(null);
-      } catch (e) { resolve(null); }
-    });
-  }
-  function idbPut(key, buf) {
-    return new Promise(async (resolve) => {
-      try {
-        const db = await idb();
-        const tx = db.transaction(IDB_STORE, 'readwrite');
-        tx.objectStore(IDB_STORE).put(buf, key);
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => resolve();
-      } catch (e) { resolve(); }
-    });
-  }
-
-  function premiumReady() {
-    return cfg.engine === 'premium' && cfg.apiKey && cfg.apiKey.trim().length > 10;
-  }
-
-  async function openaiSpeech(text) {
-    const body = {
-      model: cfg.ttsModel,
-      voice: cfg.ttsVoice,
-      input: text,
-      response_format: 'mp3',
-      speed: cfg.ttsSpeed,            // slows delivery (0.8 = noticeably calmer)
-    };
-    if (cfg.ttsModel.startsWith('gpt-4o')) body.instructions = TTS_INSTRUCTIONS;
-    const res = await fetch(OPENAI_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${cfg.apiKey.trim()}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      let msg = `HTTP ${res.status}`;
-      try { const j = await res.json(); msg = j.error?.message || msg; } catch (e) {}
-      throw new Error(msg);
-    }
-    return await res.arrayBuffer();
-  }
-
-  // Fetch a phrase (cache-backed: memory → IndexedDB → network)
-  async function ttsFetch(text) {
-    const key = ttsKey(text);
-    if (tts.mem.has(key)) return tts.mem.get(key);
-    if (tts.inflight.has(key)) return tts.inflight.get(key);
+  async function loadAtom(name) {
+    if (atomCache.has(name)) return atomCache.get(name);
+    if (atomLoading.has(name)) return atomLoading.get(name);
     const p = (async () => {
-      let buf = await idbGet(key);
-      if (!buf) {
-        buf = await openaiSpeech(text);
-        idbPut(key, buf);
-      }
-      tts.mem.set(key, buf);
-      return buf;
+      const res = await fetch(VOICE_DIR + name + '.mp3');
+      if (!res.ok) throw new Error('no audio: ' + name);
+      const buf = await res.arrayBuffer();
+      const ab = await ensureAudio().decodeAudioData(buf);
+      atomCache.set(name, ab);
+      return ab;
     })();
-    tts.inflight.set(key, p);
-    try { return await p; } finally { tts.inflight.delete(key); }
+    atomLoading.set(name, p);
+    return p;
   }
 
-  async function ttsDecode(key, buf) {
-    if (tts.decoded.has(key)) return tts.decoded.get(key);
-    const ab = await ensureAudio().decodeAudioData(buf.slice(0));
-    tts.decoded.set(key, ab);
-    return ab;
-  }
-
-  // Play a cached premium clip via Web Audio (low latency)
-  async function playPremium(text) {
-    const key = ttsKey(text);
-    const buf = await ttsFetch(text);
-    const audioBuf = await ttsDecode(key, buf);
-    const src = ensureAudio().createBufferSource();
-    src.buffer = audioBuf;
-    const g = ensureAudio().createGain();
+  // Schedule one atom at an absolute time; returns its end time.
+  async function scheduleAtom(name, startAt) {
+    const ab = await loadAtom(name);
+    const ctx = ensureAudio();
+    const src = ctx.createBufferSource();
+    src.buffer = ab;
+    const g = ctx.createGain();
     g.gain.value = 1.0;
-    src.connect(g).connect(ensureAudio().destination);
-    src.start();
+    src.connect(g).connect(ctx.destination);
+    const when = Math.max(startAt, ctx.currentTime + 0.005);
+    src.start(when);
+    return when + ab.duration;
   }
 
-  // Prefetch a list of phrases with bounded concurrency.
-  // Returns {ok, failed} counts.
-  async function prefetchPhrases(phrases, onProgress) {
-    const unique = [...new Set(phrases)];
-    let ok = 0, failed = 0;
-    const CONCURRENCY = 4;
-    let i = 0;
-    async function worker() {
-      while (i < unique.length) {
-        const idx = i++;
-        try { await ttsFetch(unique[idx]); ok++; }
-        catch (e) { failed++; }
-        onProgress && onProgress(ok + failed, unique.length);
-      }
-    }
-    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, unique.length) }, worker));
-    return { ok, failed };
-  }
-
-  // ============================================================
-  //  System voice (speechSynthesis) — fallback / system engine
-  // ============================================================
-  let voices = [];
-  let chosenVoice = null;
-  function loadVoices() {
-    if (!('speechSynthesis' in window)) { voiceRow.hidden = true; return; }
-    voices = speechSynthesis.getVoices();
-    if (!voices.length) return;
-    const en = voices.filter(v => /en(-|_)/i.test(v.lang));
-    const others = voices.filter(v => !/en(-|_)/i.test(v.lang));
-    voiceSelect.innerHTML = '';
-    [...en, ...others].forEach((v) => {
-      const o = document.createElement('option');
-      o.value = v.voiceURI; o.textContent = `${v.name} · ${v.lang}`;
-      voiceSelect.appendChild(o);
-    });
-    pickVoice();
-  }
-  function pickVoice() {
-    if (!voices.length) return;
-    if (cfg.voiceURI) {
-      const f = voices.find(v => v.voiceURI === cfg.voiceURI);
-      if (f) { chosenVoice = f; voiceSelect.value = f.voiceURI; return; }
-    }
-    for (const name of VOICE_PREFERENCE) {
-      const f = voices.find(v => v.name === name || v.name.includes(name));
-      if (f) { chosenVoice = f; voiceSelect.value = f.voiceURI; cfg.voiceURI = f.voiceURI; return; }
-    }
-    const en = voices.find(v => /en(-|_)/i.test(v.lang));
-    if (en) { chosenVoice = en; voiceSelect.value = en.voiceURI; cfg.voiceURI = en.voiceURI; return; }
-    chosenVoice = voices[0]; voiceSelect.value = chosenVoice.voiceURI; cfg.voiceURI = chosenVoice.voiceURI;
-  }
-  function speakSystem(text) {
-    if (!cfg.voice || !text || !('speechSynthesis' in window)) return;
+  // Play a chain of atoms back-to-back with a small gap between.
+  async function playSequence(names, gap = ATOM_GAP) {
+    if (!names.length) return;
     try {
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      if (chosenVoice) u.voice = chosenVoice;
-      u.rate = 0.98; u.pitch = 1.0; u.volume = 1.0;
-      speechSynthesis.speak(u);
-    } catch (e) {}
+      const ctx = ensureAudio();
+      let t = ctx.currentTime + 0.02;
+      for (const name of names) {
+        t = await scheduleAtom(name, t);
+        t += gap;
+      }
+    } catch (e) { /* missing clip — silent; beeps still fire */ }
   }
-  if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
-  else { voiceRow.hidden = true; }
+  function playAtom(name) { return playSequence([name], 0); }
 
-  // ============================================================
-  //  Unified speak() — routes to premium or system with fallback
-  // ============================================================
-  function speak(text) {
-    if (!cfg.voice || !text) return;
-    if (premiumReady()) {
-      playPremium(text).catch((e) => {
-        // any failure (network/quota/decode) → system voice so timing stays tight
-        console.warn('Premium TTS failed, falling back:', e.message);
-        speakSystem(text);
-      });
-    } else {
-      speakSystem(text);
-    }
+  function preloadVoice() {
+    const names = new Set(['done', 'relax_switch', 'relax_next', 'rest',
+      'left_stretch', 'right_stretch', 'count_1', 'count_2', 'count_3']);
+    for (let r = 1; r <= cfg.reps; r++) names.add('round_' + r);
+    for (let s = 2; s <= cfg.stretches; s++) names.add('rest_stretch_' + s);
+    names.forEach((n) => loadAtom(n).catch(() => {}));
+  }
+
+  function speakHold(round, side) {
+    if (!cfg.voice) return;
+    playSequence(['round_' + round, side + '_stretch']);
+  }
+  function speakRecover(nextStretch) {
+    if (!cfg.voice) return;
+    playAtom(nextStretch ? 'relax_next' : 'relax_switch');
+  }
+  function speakRest(hasNext, n) {
+    if (!cfg.voice) return;
+    playAtom(hasNext ? 'rest_stretch_' + n : 'rest');
+  }
+  function speakCount(n) {
+    if (!cfg.voice) return;
+    playAtom('count_' + n);
+  }
+  function speakDone() {
+    if (!cfg.voice) return;
+    playAtom('done');
   }
 
   // ============================================================
@@ -414,31 +257,10 @@
   }
   function totalDuration() { return buildPlan().reduce((s, p) => s + p.duration, 0); }
 
-  // Collect every spoken phrase in the plan (for prefetch)
-  function planPhrases() {
-    const plan = buildPlan();
-    const totalHolds = cfg.stretches * cfg.reps;
-    let holdIndex = 0;
-    const out = [];
-    for (const p of plan) {
-      if (p.type === 'hold') {
-        out.push(`Round ${p.round}. ${p.side} side. Stretch.`);
-      } else if (p.type === 'recover') {
-        out.push(p.nextStretch > p.stretch ? 'Relax. Next stretch.' : 'Relax. Switch.');
-      } else if (p.type === 'rest') {
-        out.push(p.nextStretch > p.stretch ? `Rest. Stretch ${p.nextStretch}.` : 'Rest.');
-      }
-    }
-    out.push('1', '2', '3', 'All done. Great job.');
-    return [...new Set(out)];
-  }
-
   // ---------- Dashboard helpers ----------
   function fmtClock(ms) {
     const d = new Date(ms);
-    const h = d.getHours();
-    const m = d.getMinutes().toString().padStart(2, '0');
-    return `${h}:${m}`;
+    return `${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
   }
   function fmtDur(sec) {
     sec = Math.max(0, Math.round(sec));
@@ -561,17 +383,17 @@
     setPhaseTheme(p.type);
 
     if (p.type === 'hold') {
-      speak(`Round ${p.round}. ${p.side} side. Stretch.`);
+      speakHold(p.round, p.side);
       haptic(220);
       sideEl.textContent = p.side.toUpperCase(); sideEl.style.color = 'var(--accent)';
       phaseEl.textContent = 'STRETCH';
     } else if (p.type === 'recover') {
-      speak(p.nextStretch > p.stretch ? 'Relax. Next stretch.' : 'Relax. Switch.');
+      speakRecover(p.nextStretch > p.stretch);
       haptic([110, 60, 110]);
       sideEl.textContent = 'SWITCH'; sideEl.style.color = 'var(--muted)';
       phaseEl.textContent = 'SWITCH';
     } else if (p.type === 'rest') {
-      speak(p.nextStretch > p.stretch ? `Rest. Stretch ${p.nextStretch}.` : 'Rest.');
+      speakRest(p.nextStretch > p.stretch, p.nextStretch);
       haptic([160, 80, 160]);
       sideEl.textContent = 'REST'; sideEl.style.color = 'var(--rest)';
       phaseEl.textContent = 'REST';
@@ -615,7 +437,7 @@
       if (count !== state.lastCount && count >= 1 && count <= 3) {
         state.lastCount = count;
         beep(count === 1 ? 1320 : 880, 0.16);
-        if (p.type === 'hold') speak(String(count));
+        if (p.type === 'hold') speakCount(count);
         haptic(40);
       }
     }
@@ -643,14 +465,13 @@
     doneOverlay.classList.remove('is-active');
     showScreen(runScreen);
     ensureAudio();
+    preloadVoice();
     if (cfg.music) startMusic();
     requestWakeLock();
     updateWallClock();
     clearInterval(state.clockTimer);
     state.clockTimer = setInterval(updateWallClock, 1000);
     startPhase();
-    // Pre-warm premium voice cache for the whole session (async, non-blocking)
-    if (premiumReady()) prefetchPhrases(planPhrases()).catch(() => {});
   }
   function pause() {
     if (!state.running || state.paused) return;
@@ -681,7 +502,7 @@
     state.running = false;
     cancelAnimationFrame(state.raf);
     clearInterval(state.clockTimer);
-    speak('All done. Great job.');
+    speakDone();
     haptic([300, 80, 300, 80, 500]);
     stopMusic(); releaseWakeLock();
     setPhaseTheme('done');
@@ -707,12 +528,6 @@
     cfg.stretches = clampInt($('#cfg-stretches').value, 1,  12, DEFAULTS.stretches);
     cfg.reps      = clampInt($('#cfg-reps').value,      1,  20, DEFAULTS.reps);
     cfg.voice     = $('#opt-voice').checked;
-    cfg.voiceURI  = voiceSelect.value || cfg.voiceURI;
-    cfg.engine    = document.querySelector('.seg.is-active')?.dataset.engine || 'system';
-    cfg.ttsVoice  = ttsVoiceSelect.value;
-    cfg.ttsModel  = ttsModelSelect.value;
-    cfg.ttsSpeed  = parseFloat(ttsSpeedSelect.value) || 1;
-    cfg.apiKey    = apiKeyInput.value;
     cfg.beeps     = $('#opt-beeps').checked;
     cfg.vibrate   = $('#opt-vibrate').checked;
     cfg.music     = $('#opt-music').checked;
@@ -725,13 +540,6 @@
     $('#opt-voice').checked = cfg.voice; $('#opt-beeps').checked = cfg.beeps;
     $('#opt-vibrate').checked = cfg.vibrate; $('#opt-music').checked = cfg.music;
     volSlider.value = cfg.volume; updateVolLabel(); toggleVolRow();
-    // voice engine
-    document.querySelectorAll('.seg').forEach(b => b.classList.toggle('is-active', b.dataset.engine === cfg.engine));
-    ttsVoiceSelect.value = cfg.ttsVoice;
-    ttsModelSelect.value = cfg.ttsModel;
-    ttsSpeedSelect.value = cfg.ttsSpeed;
-    apiKeyInput.value = cfg.apiKey;
-    toggleEnginePanels();
   }
   function updateSummary() {
     const hold = clampInt($('#cfg-hold').value, 5, 300, DEFAULTS.hold);
@@ -749,11 +557,6 @@
   }
   function updateVolLabel() { volVal.textContent = Math.round(parseFloat(volSlider.value) * 100) + '%'; }
   function toggleVolRow() { volRow.hidden = !$('#opt-music').checked; }
-  function toggleEnginePanels() {
-    const engine = document.querySelector('.seg.is-active')?.dataset.engine || 'system';
-    premiumPanel.hidden = (engine !== 'premium');
-    voiceRow.hidden = (engine !== 'system') || !('speechSynthesis' in window);
-  }
 
   // ---------- Persistence ----------
   function saveSettings() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg)); } catch (e) {} }
@@ -781,46 +584,6 @@
   skipBtn.addEventListener('click', skip);
   stopBtn.addEventListener('click', stop);
   doneReset.addEventListener('click', () => { doneOverlay.classList.remove('is-active'); stop(); });
-
-  // Voice engine segmented control
-  document.querySelectorAll('.seg').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.seg').forEach(b => b.classList.remove('is-active'));
-      btn.classList.add('is-active');
-      toggleEnginePanels();
-      saveSettings();
-      beep(660, 0.05);
-    });
-  });
-
-  voiceSelect.addEventListener('change', () => {
-    const f = voices.find(v => v.voiceURI === voiceSelect.value);
-    if (f) { chosenVoice = f; cfg.voiceURI = f.voiceURI; }
-    saveSettings();
-  });
-  [ttsVoiceSelect, ttsModelSelect, ttsSpeedSelect, apiKeyInput].forEach((el) =>
-    el.addEventListener('change', () => { readConfig(); saveSettings(); }));
-  apiKeyInput.addEventListener('input', () => { cfg.apiKey = apiKeyInput.value; saveSettings(); });
-
-  // Test voice button
-  testVoiceBtn.addEventListener('click', async () => {
-    readConfig(); saveSettings();
-    ttsStatus.textContent = ''; ttsStatus.className = 'tts-status';
-    if (!premiumReady()) {
-      ttsStatus.textContent = 'Enter an API key first.'; ttsStatus.className = 'tts-status err'; return;
-    }
-    testVoiceBtn.disabled = true;
-    ttsStatus.textContent = 'Generating…';
-    try {
-      ensureAudio();
-      await playPremium('Round one. Left side. Stretch.');
-      ttsStatus.textContent = '✓ Sounds great'; ttsStatus.className = 'tts-status ok';
-    } catch (e) {
-      ttsStatus.textContent = `✗ ${e.message}`; ttsStatus.className = 'tts-status err';
-    } finally {
-      testVoiceBtn.disabled = false;
-    }
-  });
 
   $('#opt-music').addEventListener('change', () => { toggleVolRow(); saveSettings(); });
   volSlider.addEventListener('input', () => { updateVolLabel(); setMusicVolume(parseFloat(volSlider.value)); saveSettings(); });
