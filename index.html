@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#05060f">
+  <meta name="theme-color" id="theme-color-meta" content="#05060f">
+  <meta name="description" content="Mobile interval timer for stretching and shadow boxing, with voice cues, beeps and a live session dashboard.">
+  <meta name="apple-mobile-web-app-title" content="Stretch&Boxe">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Stretch">
@@ -11,13 +13,14 @@
   <link rel="apple-touch-icon" href="icon.svg">
   <link rel="icon" href="icon.svg">
   <link rel="stylesheet" href="style.css">
-  <title>Stretch & Box Timer</title>
+  <title>Stretch & Boxe Timer</title>
+  <meta name="color-scheme" content="dark">
 </head>
 <body data-phase="idle" data-mode="stretch">
   <!-- mode switch (top right) -->
   <div class="mode-switch glass" id="mode-switch" role="tablist" aria-label="Workout mode">
     <button type="button" class="mode-btn is-active" data-mode="stretch" role="tab" aria-selected="true">🧘 <span>Stretch</span></button>
-    <button type="button" class="mode-btn" data-mode="box" role="tab" aria-selected="false">🥊 <span>Box</span></button>
+    <button type="button" class="mode-btn" data-mode="box" role="tab" aria-selected="false">🥊 <span>Boxe</span></button>
   </div>
 
   <!-- animated aurora background -->
@@ -261,7 +264,7 @@
   <!-- ============ DONE OVERLAY ============ -->
   <div id="done-overlay" class="overlay">
     <div class="overlay-card glass">
-      <div class="done-emoji">🎉</div>
+      <div class="done-emoji" id="done-emoji">🎉</div>
       <h2>All done!</h2>
       <p id="done-stats">Great job. See you next stretch.</p>
       <button id="done-reset" class="primary"><span>Back to setup</span></button>
@@ -269,6 +272,7 @@
   </div>
 
   <audio id="bg-audio" src="audio/happy-summer-116584.mp3" loop preload="auto"></audio>
+  <audio id="bg-audio-box" src="audio/shadow-boxing-476827.mp3" loop preload="auto"></audio>
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
-# 🧘 Stretch Timer
+# 🧘🥊 Stretch & Boxe Timer
 
-A mobile-first, offline-friendly interval timer for stretching. Hold · recover · rest · alternate sides — with a drift-free countdown, a live session dashboard, and a gentle baked-in voice.
+A mobile-first, offline-friendly interval timer with **two modes** — calm stretching and shadow boxing — plus a drift-free countdown, a live session dashboard, and a gentle baked-in voice that needs no API key.
 
 ![status](https://img.shields.io/badge/platform-mobile%20%2F%20web-6d8bff)
 
@@ -8,52 +8,44 @@ A mobile-first, offline-friendly interval timer for stretching. Hold · recover 
 
 ## Features
 
-- **Precise timing** — `performance.now()`-driven, so the 3-2-1 countdown lands exactly on the beat (no drift, unlike a shell `say` loop).
-- **Gentle baked-in voice** — cues are pre-generated with OpenAI's softest female voice (Shimmer), spoken slowly with a calm yoga-instructor direction, and shipped as static audio atoms. **No API key, no selectors, no runtime TTS calls.** Cues are decomposed into reusable clips and sequenced with small gaps that read as natural pauses.
-- **Active-session dashboard** — wall clock + ETA, overall completion donut, elapsed/remaining/holds gauges, a rep grid (done/current/upcoming), a hold/recover/rest time-split bar, and a "next up" card.
-- **Countdown beeps** — Web Audio tones for the last 3 seconds (higher pitch on "1").
-- **Left / right alternation** — odd rounds = left, even rounds = right, per stretch.
-- **Stretches × rounds structure** — e.g. 3 stretches × 10 rounds.
-- **Rest between sides** — optional longer rest phase (purple ring); `0` disables.
-- **Haptics**, **screen wake lock**, **background music** (loops a real track, with a procedural pad fallback).
+- **Two modes** via a top-right switch:
+  - **🧘 Stretch** — hold · recover · rest · alternate left/right sides, across *N stretches × M rounds*.
+  - **🥊 Boxe** — classic round structure: *N rounds* of work with rest between, and a coach calling punch combinations on a timer.
+- **Precise timing** — `performance.now()`-driven, so the 3-2-1 countdown lands exactly on the beat.
+- **Baked-in voice** — cues are pre-generated static audio atoms (no runtime TTS, no API key, no selectors). Stretch uses a soft, slow yoga voice (Shimmer); Boxe uses an energetic coach (Onyx). Missing atoms fail silently; beeps still fire.
+- **Live session dashboard** — wall clock + ETA, overall completion donut, elapsed/remaining/primary gauges, a rep/round grid, a time-split bar, and a "next up" card.
+- **Countdown beeps** (Web Audio), **haptics**, **screen wake lock**, **background music** — a calm real track for Stretch (happy-summer) and a driving trap track for Boxe (shadow-boxing), each with a procedural pad fallback if playback is blocked.
 - **Installable PWA** — add to Home Screen; works offline. Settings saved on-device.
 
-## Voice — how it works
+## How it works
 
-The spoken phrases are finite, so they're generated **once at build time** and committed as ~41 tiny MP3s in `audio/voice/`:
+### Timing
+A single `requestAnimationFrame` loop drives everything. Each phase has a `phaseStart` timestamp (`performance.now()`); the countdown is `duration − elapsed`. Pausing freezes `pauseAt` and resume shifts `phaseStart` by the pause duration, so there's zero drift. The 3-2-1 countdown fires in the last 3 seconds (beeps always; voice only on primary phases so recover/rest stay calm).
 
-| Atoms | Example text |
-|---|---|
-| `round_1` … `round_20` | "Round 1." … "Round 20." |
-| `left_stretch` / `right_stretch` | "Left side. Stretch." / "Right side. Stretch." |
-| `relax_switch` / `relax_next` | "Relax. Switch." / "Relax. Next stretch." |
-| `rest` / `rest_stretch_1` … `rest_stretch_12` | "Rest." / "Rest. Stretch 2." |
-| `count_1` / `count_2` / `count_3` | "1" / "2" / "3" |
-| `done` | "All done. Great job." |
+### Voice
+Spoken phrases are finite, so they're generated **once at build time** and committed as tiny MP3s in `audio/voice/`. Cues are decomposed into reusable atoms and sequenced with small gaps (stretch: 140 ms yoga breath; box: 100 ms coach cadence). At Start, the app preloads the session's atoms and plays them instantly via Web Audio `AudioBufferSourceNode` on a single voice bus — starting a new cue cuts any in-flight one, so the 3-2-1 never overlaps itself or the next announcement.
 
-A hold announcement = `round_N` + `side_stretch` played in sequence with a ~140 ms gap — the gap becomes a natural yoga-teacher breath. At Start, the app preloads the atoms the session will use; playback is instant via Web Audio `AudioBufferSourceNode`. If any atom is missing, that cue is silent and the beeps still fire (graceful degradation).
+**Stretch atoms:** `round_1..20`, `left_stretch` / `right_stretch`, `relax_switch` / `relax_next`, `rest` / `rest_stretch_1..12`, `count_1..3`, `done`.
+**Boxe atoms:** `box_round_1..12`, `box_work`, `box_rest`, `box_combo_*` (1-2, 1-2-3, 2-3-2, slip, roll, jab-to-body, double jab, hooks…), `box_count_1..3`, `box_done`.
 
-### Regenerating the voice
+### Architecture
+The app is one IIFE (`app.js`) with a `MODES` table that holds all per-mode behavior (plan builder, voice atom names, labels, theme, summary, done text). Adding a third workout mode is an entry in `MODES` plus a plan builder — no scattered mode conditionals. Numeric config fields are declared once in a `FIELDS` schema (id + min + max), which drives `readConfig`/`applyConfigToInputs`; the HTML `min`/`max` attributes match it.
 
-```bash
-OPENAI_API_KEY=sk-... bash scripts/generate-voice.sh
-```
-
-The script is idempotent (skips existing files). Tweak the voice/speed/direction with env vars:
+## Regenerating the voice
 
 ```bash
-VOICE=sage MODEL=gpt-4o-mini-tts SPEED=0.75 \
-  OPENAI_API_KEY=sk-... bash scripts/generate-voice.sh
+OPENAI_API_KEY=sk-... bash scripts/generate-voice.sh all      # both themes
+OPENAI_API_KEY=sk-... bash scripts/generate-voice.sh stretch   # stretch only
+OPENAI_API_KEY=sk-... bash scripts/generate-voice.sh box       # box only
 ```
 
-The key is used only by the script (build time); it is never in the app, never in the repo, and never requested at runtime.
+The script is idempotent (skips existing files). Per-theme voice/speed/direction can be tweaked with env vars (`VOICE`, `BOX_VOICE`, `SPEED`, `BOX_SPEED`, etc.). The key is used only by the script at build time — never in the app, never in the repo, never requested at runtime.
 
 ## Quick start
 
 ```bash
-cd ~/me/tmp/stretching-app
-python3 -m http.server 8080
-# visit http://localhost:8080 (or your LAN IP from a phone)
+cd stretching-app
+python3 -m http.server 8080    # visit http://localhost:8080 (or your LAN IP from a phone)
 ```
 
 ## Controls
@@ -64,10 +56,14 @@ python3 -m http.server 8080
 | Pause / resume | **⏸ Pause** |
 | Jump to next phase | **⏭ Skip** |
 | Stop & return to setup | **⏹ Stop** |
+| Switch workout | **🧘 / 🥊** top-right (disabled mid-session) |
 
 ## Config
 
-Hold · Recovery · Rest between sides · Stretches · Rounds · Voice / Beeps / Vibration / Music (with volume). Defaults: 30 s hold, 5 s recovery, 10 rounds.
+**Stretch:** Hold · Recovery · Rest between sides · Stretches · Rounds. Defaults: 30 s hold, 5 s recovery, 10 rounds.
+**Boxe:** Rounds · Work sec/round · Rest between · Combo pace. Defaults: 6 rounds, 60 s work, 20 s rest, combos every 15 s.
+
+Plus toggles: Voice cues · Countdown beeps · Vibration · Background music (with a live volume slider on both the setup and run screens).
 
 ## License
 

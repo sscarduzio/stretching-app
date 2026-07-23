@@ -147,7 +147,6 @@ html, body {
 
 /* ---------- Toggles card ---------- */
 .toggles { display: flex; flex-direction: column; gap: 2px; }
-.field-row { display: flex; flex-direction: column; gap: 0; }
 .toggle {
   display: flex; align-items: center; justify-content: space-between;
   padding: 13px 0; cursor: pointer; font-size: 16px;
@@ -168,21 +167,6 @@ html, body {
 }
 .toggle input:checked + .switch { background: linear-gradient(135deg, var(--recover), #2bb673); border-color: transparent; }
 .toggle input:checked + .switch::after { transform: translateX(21px); }
-
-/* ---------- Voice select ---------- */
-.select-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; }
-.select-row label { color: var(--muted); font-size: 14px; }
-.glass-select {
-  flex: 1; height: 42px; border-radius: 12px;
-  background: rgba(0,0,0,.28); color: var(--text);
-  border: 1px solid var(--stroke-soft);
-  font-size: 14px; padding: 0 10px;
-  -webkit-appearance: none; appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239aa3c7'><path d='M2 4l4 4 4-4'/></svg>");
-  background-repeat: no-repeat; background-position: right 10px center;
-  cursor: pointer;
-}
-.glass-select:focus { outline: none; border-color: var(--stroke); }
 
 /* ---------- Volume slider ---------- */
 .vol-row { display: flex; align-items: center; gap: 12px; padding: 14px 0 4px; font-size: 15px; font-weight: 600; }
@@ -238,8 +222,8 @@ html, body {
 .hint { color: var(--muted-2); font-size: 13px; margin: 0; }
 
 /* ---------- Run screen ---------- */
-#run-screen { justify-content: space-between; gap: 0; }
-.run-header { width: 100%; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+#run-screen { justify-content: space-between; gap: 12px; }
+.run-header { width: 100%; max-width: 460px; display: flex; justify-content: center; gap: 7px; flex-wrap: wrap; }
 .chip {
   font-size: 13px; font-weight: 600; color: var(--muted);
   background: var(--glass); border: 1px solid var(--stroke);
@@ -332,9 +316,6 @@ body[data-phase="rest"] .ring-glow { animation: breathe 3s ease-in-out infinite;
    ACTIVE SESSION DASHBOARD
    ============================================================ */
 
-/* run screen scrolls if content exceeds viewport */
-#run-screen { gap: 12px; }
-
 /* ---------- Topbar (wall clock · live · ETA) ---------- */
 .topbar {
   width: 100%; max-width: 460px;
@@ -355,9 +336,6 @@ body[data-phase="rest"] .ring-glow { animation: breathe 3s ease-in-out infinite;
 body[data-phase="recover"] .topbar-live .dot { background: var(--recover); box-shadow: 0 0 8px var(--recover); }
 body[data-phase="rest"] .topbar-live .dot { background: var(--rest); box-shadow: 0 0 8px var(--rest); }
 @keyframes livepulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
-
-/* ---------- Position chips ---------- */
-.run-header { width: 100%; max-width: 460px; display: flex; justify-content: center; gap: 7px; flex-wrap: wrap; }
 
 /* ---------- Next-up card ---------- */
 .next-card {
@@ -435,6 +413,16 @@ body[data-phase="recover"] .rep-dot.done { box-shadow: 0 0 6px rgba(52,211,153,.
 /* ============================================================
    MODE SWITCH (top right)
    ============================================================ */
+/* ring gradient stops — themed per mode (CSS overrides SVG attr) */
+#grad-start { stop-color: #ff7a7a; }
+#grad-end   { stop-color: #ff3d6e; }
+body[data-mode="box"] #grad-start { stop-color: #ffb84d; }
+body[data-mode="box"] #grad-end   { stop-color: #ff4d3d; }
+
+/* box mode hides stretch-only UI (chip + recover legend) */
+body[data-mode="box"] #stretch-label { display: none; }
+body[data-mode="box"] #lg-recover-wrap { display: none; }
+
 .mode-switch {
   position: fixed; top: calc(var(--safe-top) + 10px); right: 14px;
   z-index: 30; display: flex; padding: 3px; border-radius: 13px;
