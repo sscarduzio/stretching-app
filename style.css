@@ -5,8 +5,9 @@
   --card-border: rgba(255, 255, 255, 0.1);
   --text: #eef2ff;
   --muted: #9aa3c7;
-  --accent: #ff5e5e;       /* hold */
+  --accent: #ff5e5e;        /* hold */
   --accent-recover: #34d399; /* recover */
+  --accent-rest: #8b7bff;    /* rest */
   --radius: 18px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -30,7 +31,7 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
   padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bottom) + 24px);
 }
 
@@ -97,12 +98,15 @@ html, body {
   padding: 12px 0;
   cursor: pointer;
   font-size: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
+.toggle:last-of-type, .toggle:last-child { border-bottom: none; }
 .toggle input { position: absolute; opacity: 0; pointer-events: none; }
 .switch {
   width: 50px; height: 30px; border-radius: 30px;
   background: rgba(255,255,255,0.14);
   position: relative; transition: background .2s;
+  flex-shrink: 0;
 }
 .switch::after {
   content: ""; position: absolute; top: 3px; left: 3px;
@@ -111,6 +115,49 @@ html, body {
 }
 .toggle input:checked + .switch { background: var(--accent-recover); }
 .toggle input:checked + .switch::after { transform: translateX(20px); }
+
+/* ---------- Volume slider ---------- */
+.vol-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 0 4px;
+  font-size: 15px; font-weight: 600;
+}
+.vol-row label { width: 72px; }
+.vol-row input[type="range"] {
+  flex: 1; height: 30px;
+  -webkit-appearance: none; appearance: none;
+  background: transparent;
+}
+.vol-row input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 6px;
+  background: linear-gradient(90deg, var(--accent-recover), rgba(255,255,255,0.12));
+}
+.vol-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #fff; margin-top: -8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.vol-row input[type="range"]::-moz-range-track {
+  height: 6px; border-radius: 6px;
+  background: linear-gradient(90deg, var(--accent-recover), rgba(255,255,255,0.12));
+}
+.vol-row input[type="range"]::-moz-range-thumb {
+  width: 22px; height: 22px; border: none; border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.vol-val { width: 44px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* ---------- Summary ---------- */
+.summary {
+  margin: 0;
+  max-width: 460px; width: 100%;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.summary b { color: var(--text); font-weight: 600; }
 
 /* ---------- Primary button ---------- */
 .primary {
@@ -130,11 +177,11 @@ html, body {
 
 /* ---------- Run screen ---------- */
 #run-screen { justify-content: space-between; gap: 0; }
-.run-header { width: 100%; display: flex; justify-content: center; }
-.round-label {
-  font-size: 15px; font-weight: 600; color: var(--muted);
+.run-header { width: 100%; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.chip {
+  font-size: 13px; font-weight: 600; color: var(--muted);
   background: var(--card); border: 1px solid var(--card-border);
-  padding: 6px 16px; border-radius: 999px;
+  padding: 6px 14px; border-radius: 999px;
 }
 
 .ring-wrap {
@@ -207,10 +254,13 @@ html, body {
 .overlay-card p { margin: 0 0 24px; color: var(--muted); }
 
 /* ---------- Accent theming by phase ---------- */
-body.phase-hold { --accent: #ff5e5e; }
+body.phase-hold    { --accent: #ff5e5e; }
 body.phase-recover { --accent: #34d399; }
-body.phase-hold .ring-fg { filter: drop-shadow(0 0 12px rgba(255, 94, 94, 0.45)); }
+body.phase-rest    { --accent: #8b7bff; }
+body.phase-hold    .ring-fg { filter: drop-shadow(0 0 12px rgba(255, 94, 94, 0.45)); }
 body.phase-recover .ring-fg { filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.45)); }
+body.phase-rest    .ring-fg { filter: drop-shadow(0 0 12px rgba(139, 123, 255, 0.45)); }
 
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
 body.phase-hold .ring-fg { animation: pulse 2.4s ease-in-out infinite; }
+body.phase-rest .ring-fg { animation: pulse 3.2s ease-in-out infinite; }

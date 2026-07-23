@@ -33,7 +33,7 @@
       </div>
 
       <div class="field">
-        <label for="cfg-recover">Recovery <small>seconds</small></label>
+        <label for="cfg-recover">Recovery <small>switch sides</small></label>
         <div class="stepper">
           <button type="button" data-target="cfg-recover" data-step="-1">−</button>
           <input id="cfg-recover" type="number" inputmode="numeric" value="5" min="1" max="60" step="1">
@@ -42,10 +42,28 @@
       </div>
 
       <div class="field">
-        <label for="cfg-reps">Rounds</label>
+        <label for="cfg-rest">Rest between sides <small>0 = off</small></label>
+        <div class="stepper">
+          <button type="button" data-target="cfg-rest" data-step="-5">−</button>
+          <input id="cfg-rest" type="number" inputmode="numeric" value="0" min="0" max="120" step="5">
+          <button type="button" data-target="cfg-rest" data-step="5">+</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="cfg-stretches">Stretches <small>exercises</small></label>
+        <div class="stepper">
+          <button type="button" data-target="cfg-stretches" data-step="-1">−</button>
+          <input id="cfg-stretches" type="number" inputmode="numeric" value="1" min="1" max="12" step="1">
+          <button type="button" data-target="cfg-stretches" data-step="1">+</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="cfg-reps">Rounds <small>per stretch</small></label>
         <div class="stepper">
           <button type="button" data-target="cfg-reps" data-step="-1">−</button>
-          <input id="cfg-reps" type="number" inputmode="numeric" value="10" min="1" max="50" step="1">
+          <input id="cfg-reps" type="number" inputmode="numeric" value="10" min="1" max="20" step="1">
           <button type="button" data-target="cfg-reps" data-step="1">+</button>
         </div>
       </div>
@@ -55,17 +73,25 @@
       <label class="toggle"><span>🔊 Voice cues</span><input type="checkbox" id="opt-voice" checked><span class="switch"></span></label>
       <label class="toggle"><span>⏱️ Countdown beeps</span><input type="checkbox" id="opt-beeps" checked><span class="switch"></span></label>
       <label class="toggle"><span>📳 Vibration</span><input type="checkbox" id="opt-vibrate" checked><span class="switch"></span></label>
-      <label class="toggle"><span>🎵 Ambient music</span><input type="checkbox" id="opt-music"><span class="switch"></span></label>
+      <label class="toggle"><span>🎵 Background music</span><input type="checkbox" id="opt-music"><span class="switch"></span></label>
+      <div class="vol-row" id="vol-row" hidden>
+        <label for="cfg-vol">Volume</label>
+        <input id="cfg-vol" type="range" min="0" max="1" step="0.05" value="0.35">
+        <span id="vol-val" class="vol-val">35%</span>
+      </div>
     </section>
 
+    <p class="summary" id="summary"></p>
+
     <button id="start-btn" class="primary">Start</button>
-    <p class="hint">Screen stays awake &middot; works offline</p>
+    <p class="hint">Screen stays awake &middot; settings saved on this device</p>
   </main>
 
   <!-- ============ RUN SCREEN ============ -->
   <main id="run-screen" class="screen" hidden>
     <div class="run-header">
-      <span id="round-label" class="round-label">Round 1 / 10</span>
+      <span id="stretch-label" class="chip">Stretch 1 / 1</span>
+      <span id="round-label" class="chip">Round 1 / 10</span>
     </div>
 
     <div class="ring-wrap">
@@ -92,10 +118,13 @@
     <div class="overlay-card">
       <div class="done-emoji">🎉</div>
       <h2>All done!</h2>
-      <p>Great job. See you next stretch.</p>
+      <p id="done-stats">Great job. See you next stretch.</p>
       <button id="done-reset" class="primary">Back to setup</button>
     </div>
   </div>
+
+  <!-- Background music (real track, looped) -->
+  <audio id="bg-audio" src="audio/happy-summer-116584.mp3" loop preload="auto"></audio>
 
   <script src="app.js"></script>
 </body>
