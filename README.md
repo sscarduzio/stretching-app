@@ -7,7 +7,8 @@ A mobile-first, offline-friendly interval timer for stretching. Hold &middot; re
 ## Features
 
 - **Precise timing** — driven by `performance.now()`, so the 3-2-1 countdown lands exactly on the beat (no drift, unlike a shell `say` loop).
-- **Voice cues** — spoken round + side announcements via the Web Speech API ("Round 3. Right side. Stretch.").
+- **Premium voice (OpenAI)** — natural neural TTS via `gpt-4o-mini-tts` (voices: Nova, Coral, Sage, Echo…). Bring your own API key; phrases are prefetched at session start and cached in IndexedDB, so generation happens once and playback is instant & free thereafter. Calm "yoga instructor" voice direction. Falls back to the system engine on any failure.
+- **System voice** — embedded `speechSynthesis` voices with a picker; auto-selects the most natural installed voice (Ava, Evan, Samantha, Daniel…).
 - **Countdown beeps** — Web Audio tones for the last 3 seconds (higher pitch on "1").
 - **Left / right alternation** — odd rounds = left, even rounds = right, per stretch.
 - **Stretches × rounds structure** — e.g. 3 stretches × 10 rounds. Each stretch is announced; a breather is inserted between stretches.
@@ -66,6 +67,23 @@ The session is compiled into a **plan** (an array of `hold` / `recover` / `rest`
 | Wake lock | ✅ 16.4+ | ✅ | ✅ |
 | Vibration | — | ✅ | — |
 | Background music | ✅ | ✅ | ✅ |
+
+## Voice engines
+
+| Engine | Quality | Setup | Cost |
+|---|---|---|---|
+| **Premium (OpenAI)** | ⭐⭐⭐⭐⭐ neural, natural | Paste your OpenAI API key | ~$0.0004 per short phrase (one-time per phrase; cached) |
+| **System** | ⭐⭐⭐ embedded OS voices | None | Free |
+
+### Using Premium (OpenAI)
+
+1. Get an API key at https://platform.openai.com/api-keys (a few dollars of credit lasts effectively forever for this app).
+2. In the app: Voice engine → **Premium**, paste the key, pick a voice (Nova / Coral / Sage / Echo…), model `gpt-4o-mini-tts`.
+3. Tap **▶ Test voice** to verify.
+
+The key is stored only in your browser's `localStorage` and is sent **only** to `api.openai.com`. It is never committed to the repo. Because every spoken phrase is cached in IndexedDB, you pay for each unique phrase only once — subsequent sessions are instant and free.
+
+The set of phrases is finite (round announcements × left/right, recover/rest cues, 1-2-3 countdown, done), so the total cost per voice is a few cents at most.
 
 ## License
 
