@@ -15,7 +15,10 @@ A mobile-first, offline-friendly interval timer with **two modes** — calm stre
 - **Baked-in voice** — cues are pre-generated static audio atoms (no runtime TTS, no API key, no selectors). Stretch uses a soft, slow yoga voice (Shimmer); Boxe uses an energetic coach (Onyx). Missing atoms fail silently; beeps still fire.
 - **Live session dashboard** — wall clock + ETA, overall completion donut, elapsed/remaining/primary gauges, a rep/round grid, a time-split bar, and a "next up" card.
 - **Countdown beeps** (Web Audio), **haptics**, **screen wake lock**, **background music** — a calm real track for Stretch (happy-summer) and a driving trap track for Boxe (shadow-boxing), each with a procedural pad fallback if playback is blocked.
-- **Installable PWA** — add to Home Screen; works offline. Settings saved on-device.
+- **Installable PWA** — add to Home Screen; a service worker precaches the app and all voice cues, so it **works fully offline** (music caches on first play). Settings saved on-device.
+- **Glove-proof** — tap anywhere on the ring to pause/resume; boxe work rounds get the classic 10-second warning clapper.
+- **Focus mode** — one tap strips the screen to a giant ring + digits: a propped-up iPad becomes a gym wall clock.
+- **Share workouts** — the URL *is* the workout (`#/boxe?rounds=6&work=180`); the Share button sends it via the native share sheet.
 
 ## How it works
 

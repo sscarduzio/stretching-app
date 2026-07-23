@@ -21,6 +21,7 @@ export interface Settings {
   hold: number; recover: number; rest: number; stretches: number; sets: number;
   boxRounds: number; boxWork: number; boxRest: number; boxCombos: number;
   prepare: number; // "get ready" lead-in before the first phase, 0 = off
+  focus: boolean;  // big-clock mode: hide the dashboard, giant ring
   voice: boolean; beeps: boolean; vibrate: boolean; music: boolean; volume: number;
 }
 
@@ -29,6 +30,7 @@ export const DEFAULTS: Settings = {
   hold: 30, recover: 5, rest: 15, stretches: 1, sets: 5,
   boxRounds: 6, boxWork: 60, boxRest: 20, boxCombos: 15,
   prepare: 10,
+  focus: false,
   voice: true, beeps: true, vibrate: true, music: false, volume: 0.35,
 };
 

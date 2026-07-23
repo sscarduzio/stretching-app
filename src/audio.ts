@@ -26,6 +26,11 @@ export function beep(freq = 880, dur = 0.14): void {
   osc.start(t); osc.stop(t + dur + 0.03);
 }
 
+// boxing 10-second warning: three quick clacks
+export function clapper(): void {
+  [0, 140, 280].forEach((ms) => setTimeout(() => beep(1046, 0.09), ms));
+}
+
 export function haptic(p: number | number[]): void {
   if (cfg().vibrate) try { navigator.vibrate(p); } catch { /* unsupported */ }
 }

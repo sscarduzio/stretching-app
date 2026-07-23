@@ -58,6 +58,11 @@ export default function App() {
     document.body.dataset.phase = phaseTheme;
   }, [phaseTheme]);
 
+  const focus = useApp((s) => s.focus);
+  useEffect(() => {
+    document.body.dataset.focus = focus ? 'on' : 'off';
+  }, [focus]);
+
   const inSession = running || finished;
   return (
     <>

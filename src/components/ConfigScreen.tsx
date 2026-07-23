@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { beep, setMusicVolume } from '../audio';
 import { start } from '../engine';
 import { t } from '../i18n';
@@ -48,14 +49,14 @@ function PresetChip({ p, settings }: { p: Preset; settings: Settings }) {
   );
 }
 
-const SOUND_CHIPS = [
+export const SOUND_CHIPS = [
   { k: 'voice', icon: '🔊', label: () => t.config.voice },
   { k: 'beeps', icon: '⏱️', label: () => t.config.beeps },
   { k: 'vibrate', icon: '📳', label: () => t.config.haptics },
   { k: 'music', icon: '🎵', label: () => t.config.music },
 ] as const;
 
-function SoundChip({ k, icon, label }: (typeof SOUND_CHIPS)[number]) {
+export function SoundChip({ k, icon, label }: (typeof SOUND_CHIPS)[number]) {
   const on = useApp((s) => s[k]);
   return (
     <button
@@ -66,6 +67,28 @@ function SoundChip({ k, icon, label }: (typeof SOUND_CHIPS)[number]) {
     >
       <span className="ico" aria-hidden="true">{icon}</span>
       <span>{label()}</span>
+    </button>
+  );
+}
+
+// permalinks already encode the workout — this just puts them in hands
+function ShareButton() {
+  const [copied, setCopied] = useState(false);
+  const share = async () => {
+    const url = location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: document.title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch { /* user cancelled the share sheet */ }
+  };
+  return (
+    <button type="button" className="share-btn" onClick={share}>
+      {copied ? t.config.copied : <>📤 {t.config.share}</>}
     </button>
   );
 }
@@ -136,6 +159,7 @@ export default function ConfigScreen({ active }: { active: boolean }) {
       </div>
 
       <button className="primary" onClick={start}><span>{t.config.start}</span></button>
+      <ShareButton />
       <p className="hint">{t.config.hint}</p>
     </main>
   );

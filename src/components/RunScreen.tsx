@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import { haptic } from '../audio';
 import { pause, resume, skip, stop } from '../engine';
 import { t } from '../i18n';
 import { MODES, type Mode } from '../modes';
 import { fmtClock, fmtDur, useApp, useSettings, type Phase } from '../store';
-import { VolumeSlider } from './ConfigScreen';
+import { SOUND_CHIPS, SoundChip, VolumeSlider } from './ConfigScreen';
 
 // prepare is mode-agnostic, so its labels live outside the MODES table
 const ringLabels = (mode: Mode, phase: Phase) =>
@@ -34,6 +35,15 @@ function Topbar() {
   );
 }
 
+// tap anywhere on the ring = pause/resume — a boxer with wrapped hands
+// can't hit a small button; the Pause control stays for keyboard/AT users
+function toggleTapPause() {
+  const s = useApp.getState();
+  if (!s.running) return;
+  if (s.paused) resume(); else pause();
+  haptic(30);
+}
+
 function Ring() {
   const progress = useApp((s) => s.progress);
   const display = useApp((s) => s.display);
@@ -44,7 +54,7 @@ function Ring() {
   const badgeColor = phase.type === 'rest' ? 'var(--rest)'
     : phase.type === 'recover' ? 'var(--muted)' : 'var(--accent)';
   return (
-    <div className="ring-wrap">
+    <div className="ring-wrap" onClick={toggleTapPause}>
       <svg viewBox="0 0 320 320" className="ring" aria-hidden="true">
         <defs>
           <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">
@@ -250,12 +260,18 @@ export default function RunScreen({ active }: { active: boolean }) {
 
       <DistBar />
 
-      {s.music && (
-        <div className="run-vol glass">
-          <span className="run-vol-icon" aria-hidden="true">🔊</span>
-          <VolumeSlider id="run-vol-slider" />
+      {/* the audio layers stay adjustable mid-workout — no trip to setup */}
+      <div className="run-vol glass run-audio">
+        <div className="sound-chips">
+          {SOUND_CHIPS.map((c) => <SoundChip key={c.k} {...c} />)}
         </div>
-      )}
+        {s.music && (
+          <div className="vol-row">
+            <span className="run-vol-icon" aria-hidden="true">🔊</span>
+            <VolumeSlider id="run-vol-slider" />
+          </div>
+        )}
+      </div>
 
       <div className="controls">
         <button className="ctrl" onClick={() => (s.paused ? resume() : pause())}>
@@ -263,6 +279,11 @@ export default function RunScreen({ active }: { active: boolean }) {
         </button>
         <button className="ctrl" onClick={skip}><span>{t.run.skip}</span></button>
         <button className="ctrl danger" onClick={stop}><span>{t.run.stop}</span></button>
+        <button
+          className={`ctrl ctrl-icon${settings.focus ? ' is-on' : ''}`}
+          aria-pressed={settings.focus} aria-label={t.run.focus}
+          onClick={() => useApp.getState().set({ focus: !settings.focus })}
+        ><span aria-hidden="true">⛶</span></button>
       </div>
     </main>
   );

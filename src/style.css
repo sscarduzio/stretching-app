@@ -640,3 +640,43 @@ summary:focus-visible {
   .screen { transition: opacity .2s linear; transform: none; }
   .overlay, .overlay-card { transition: opacity .2s linear; transform: none; }
 }
+
+/* ============================================================
+   SHARE · RUN AUDIO CHIPS · FOCUS MODE
+   ============================================================ */
+
+.share-btn {
+  border: 1px solid var(--stroke-soft); border-radius: 999px;
+  background: var(--glass); color: var(--muted);
+  padding: 9px 18px; font-size: 14px; font-weight: 600; cursor: pointer;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  transition: color .2s, border-color .2s, transform .1s var(--ease);
+}
+.share-btn:active { transform: scale(.95); }
+
+/* compact icon-only sound chips mid-session */
+.run-audio { flex-direction: column; gap: 8px; }
+.run-audio .sound-chips { width: 100%; }
+.run-audio .schip { padding: 7px 4px; font-size: 11px; }
+.run-audio .schip .ico { font-size: 16px; }
+.run-audio .vol-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 0; }
+.run-audio .vol-row input[type="range"] { flex: 1; }
+
+/* square focus toggle at the end of the controls row */
+.ctrl-icon { flex: 0 0 58px; font-size: 21px; }
+.ctrl-icon.is-on { color: var(--accent); border-color: var(--accent-2); }
+
+/* focus mode: big-clock — the ring and the controls, nothing else */
+body[data-focus="on"] #run-screen .run-header,
+body[data-focus="on"] #run-screen .next-card,
+body[data-focus="on"] #run-screen .dash-row,
+body[data-focus="on"] #run-screen .reps-card,
+body[data-focus="on"] #run-screen .dist-card,
+body[data-focus="on"] #run-screen .run-audio { display: none; }
+body[data-focus="on"] #run-screen.is-active {
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+}
+body[data-focus="on"] #run-screen .ring-wrap { width: min(88vw, 60vh); }
+body[data-focus="on"] .time { font-size: clamp(80px, 22vw, 220px); }
+body[data-focus="on"] .phase-label { font-size: clamp(15px, 2.6vw, 26px); }
+body[data-focus="on"] #run-screen .controls { max-width: 560px; align-self: center; }

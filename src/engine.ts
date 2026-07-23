@@ -1,7 +1,7 @@
 // Timer engine — drift-free performance.now() loop, kept outside React.
 // Mutable per-frame state lives in module locals; anything the UI renders is
 // pushed into the zustand store (ring progress at 60fps, dashboard throttled).
-import { beep, cutVoice, ensureAudio, haptic, playAtom, playSequence, sequenceDuration, startMusic, stopMusic } from './audio';
+import { beep, clapper, cutVoice, ensureAudio, haptic, playAtom, playSequence, sequenceDuration, startMusic, stopMusic } from './audio';
 import { COMBOS, MODES, PREPARE_FIELD } from './modes';
 import { useApp, type Phase } from './store';
 
@@ -20,6 +20,7 @@ let phaseStart = 0;
 let pauseAt = 0;
 let lastCount = -1;
 let lastDash = 0;
+let warned = false; // 10s clapper fired for the current phase
 let comboPlan: { at: number; name: string }[] = [];
 let comboPtr = 0;
 
@@ -60,7 +61,7 @@ function startPhase() {
   if (!p) return finish();
   const m = mode();
   phaseStart = performance.now();
-  lastCount = -1;
+  lastCount = -1; warned = false;
   comboPlan = []; comboPtr = 0;
 
   if (s.voice) {
@@ -122,6 +123,13 @@ function tick() {
   if (p.type === 'work' && comboPtr < comboPlan.length && elapsed >= comboPlan[comboPtr].at) {
     if (s.voice) void playAtom(comboPlan[comboPtr].name);
     comboPtr++;
+  }
+
+  // boxing-style 10-second warning on work rounds (clack-clack-clack)
+  if (p.type === 'work' && !warned && p.duration > 15 && remaining <= 10.05) {
+    warned = true;
+    clapper();
+    haptic([60, 60, 60]);
   }
 
   // 3-2-1 countdown (beeps always; voice only on primary phases)
