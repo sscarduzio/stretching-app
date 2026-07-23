@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { beep, setMusicVolume } from '../audio';
 import { start } from '../engine';
-import { t } from '../i18n';
+import { LANGS, locale, setLocale, t } from '../i18n';
 import { MODES, PREPARE_FIELD, type FieldDef, type Preset } from '../modes';
 import { useApp, useSettings, type Settings } from '../store';
 
@@ -96,6 +96,17 @@ function ShareButton() {
   );
 }
 
+function LangSelect() {
+  return (
+    <label className="lang-row glass">
+      <span aria-hidden="true">🌐</span>
+      <select aria-label={t.config.language} value={locale} onChange={(e) => setLocale(e.target.value)}>
+        {Object.entries(LANGS).map(([k, name]) => <option key={k} value={k}>{name}</option>)}
+      </select>
+    </label>
+  );
+}
+
 export function VolumeSlider({ id }: { id: string }) {
   const volume = useApp((s) => s.volume);
   const apply = (v: number) => {
@@ -162,7 +173,10 @@ export default function ConfigScreen({ active }: { active: boolean }) {
       </div>
 
       <button className="primary" onClick={start}><span>{t.config.start}</span></button>
-      <ShareButton />
+      <div className="under-start">
+        <ShareButton />
+        <LangSelect />
+      </div>
       <p className="hint">{t.config.hint}</p>
     </main>
   );

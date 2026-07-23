@@ -37,6 +37,7 @@ export const en = {
     volume: 'Volume', advanced: 'Advanced', start: 'Start',
     hint: 'Screen stays awake · saved on this device',
     share: 'Share workout', copied: 'Link copied ✓',
+    language: 'Language',
     presetsAria: 'Presets', workoutModeAria: 'Workout mode',
     increase: (label: string) => `increase ${label}`,
     decrease: (label: string) => `decrease ${label}`,

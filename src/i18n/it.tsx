@@ -32,6 +32,7 @@ export const it: Messages = {
     volume: 'Volume', advanced: 'Avanzate', start: 'Inizia',
     hint: 'Lo schermo resta acceso · salvato sul dispositivo',
     share: 'Condividi allenamento', copied: 'Link copiato ✓',
+    language: 'Lingua',
     presetsAria: 'Programmi', workoutModeAria: 'Tipo di allenamento',
     increase: (label: string) => `aumenta ${label}`,
     decrease: (label: string) => `riduci ${label}`,

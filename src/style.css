@@ -683,6 +683,19 @@ summary:focus-visible {
    SHARE · RUN AUDIO CHIPS · FOCUS MODE
    ============================================================ */
 
+.under-start { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+
+.lang-row {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 14px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--stroke-soft); font-size: 14px;
+}
+.lang-row select {
+  background: transparent; border: none; color: var(--muted);
+  font: inherit; font-weight: 600; cursor: pointer; outline-offset: 3px;
+}
+.lang-row select option { background: #10131f; color: #fff; }
+
 .share-btn {
   border: 1px solid var(--stroke-soft); border-radius: 999px;
   background: var(--glass); color: var(--muted);
