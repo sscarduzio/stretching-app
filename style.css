@@ -68,7 +68,7 @@ html, body {
 /* ---------- Screens ---------- */
 .screen {
   position: relative; z-index: 1;
-  min-height: 100%;
+  height: 100%;
   display: flex; flex-direction: column; align-items: center;
   gap: 18px;
   padding: calc(var(--safe-top) + 22px) 22px calc(var(--safe-bottom) + 26px);
@@ -76,7 +76,10 @@ html, body {
   pointer-events: none;
   transition: opacity .5s var(--ease), transform .5s var(--ease);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
+.screen > * { flex-shrink: 0; }
 .screen.is-active { opacity: 1; transform: none; pointer-events: auto; }
 [hidden] { display: none !important; }
 
