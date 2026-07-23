@@ -455,6 +455,33 @@ body[data-phase="recover"] .mode-switch,
 body[data-phase="rest"] .mode-switch,
 body[data-phase="done"] .mode-switch { display: none; }
 
+/* ---------- About (info button + dialog) ---------- */
+.info-btn {
+  position: fixed; top: calc(var(--safe-top) + 10px); left: 14px;
+  z-index: 30; width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center; padding: 0;
+  font-size: 17px; line-height: 1; cursor: pointer; color: var(--text);
+  transition: background .2s var(--ease), transform .1s var(--ease);
+}
+.info-btn:active { background: rgba(255,255,255,.14); transform: scale(.94); }
+/* hide info button during a session, same as .mode-switch */
+body[data-phase="hold"] .info-btn,
+body[data-phase="work"] .info-btn,
+body[data-phase="recover"] .info-btn,
+body[data-phase="rest"] .info-btn,
+body[data-phase="prepare"] .info-btn,
+body[data-phase="done"] .info-btn { display: none; }
+
+.about-card { text-align: left; }
+.about-card h2 { text-align: center; margin: 0 0 16px; }
+.about-card p { margin: 0 0 14px; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+.about-card a {
+  color: var(--accent-2); font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.about-credits { display: flex; flex-direction: column; gap: 5px; }
+.about-card .primary { margin-top: 10px; }
+
 /* ============================================================
    BOXING THEME  (body[data-mode="boxe"])
    ============================================================ */

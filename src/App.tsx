@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { beep } from './audio';
 import { t } from './i18n';
 import { MODES } from './modes';
@@ -6,6 +6,7 @@ import { useApp, type ModeKey } from './store';
 import ConfigScreen from './components/ConfigScreen';
 import RunScreen from './components/RunScreen';
 import DoneOverlay from './components/DoneOverlay';
+import AboutOverlay from './components/AboutOverlay';
 
 function ModeSwitch() {
   const mode = useApp((s) => s.mode);
@@ -64,13 +65,21 @@ export default function App() {
   }, [focus]);
 
   const inSession = running || finished;
+  const [aboutOpen, setAboutOpen] = useState(false);
   return (
     <>
+      <button
+        type="button" className="info-btn glass" aria-label={t.about.button}
+        onClick={() => setAboutOpen(true)}
+      >
+        <span aria-hidden="true">ℹ️</span>
+      </button>
       <ModeSwitch />
       <Aurora />
       <ConfigScreen active={!inSession} />
       <RunScreen active={inSession} />
       <DoneOverlay />
+      <AboutOverlay open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </>
   );
 }

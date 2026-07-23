@@ -73,6 +73,17 @@ export const it: Messages = {
     },
   },
 
+  about: {
+    button: 'Informazioni sull’app',
+    title: 'Informazioni',
+    what: 'Un timer a intervalli gratuito con due anime: stretching rilassato e boxe a vuoto. Con una vera voce da coach, preset pronti all’uso e una dashboard live che conta al posto tuo.',
+    who: 'È per chiunque faccia stretching o boxe a vuoto, a casa o in palestra. E anche per i coach: condividi un intero allenamento semplicemente inviando l’URL.',
+    why: 'Niente pubblicità, niente account, niente abbonamenti. Funziona completamente offline dopo il primo caricamento, si installa sulla schermata home e il timer parte solo quando il coach finisce di parlare — come farebbe un vero allenatore.',
+    madeBy: 'Creato da Simone Scarduzio',
+    production: 'Una produzione Beshu Limited (UK)',
+    close: 'Chiudi',
+  },
+
   done: {
     title: 'Finito!', back: 'Torna alle impostazioni',
     stretch: (holds, stretches, mins) =>
