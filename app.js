@@ -126,6 +126,27 @@
   }
 
   // Schedule one atom at an absolute time; returns its end time.
+  // Single voice bus: only one voice cue plays at a time. Starting a
+  // new cue cuts any currently-playing/scheduled voice so cues never
+  // overlap. (The 3-2-1 count clips are ~1.1s each but fire every 1.0s,
+  // and the final count bleeds into the next phase's announcement —
+  // cutting on new cue fixes all of that cleanly.)
+  let voiceGain = null;
+  const activeSources = [];
+  function voiceBus() {
+    if (!voiceGain) {
+      const ctx = ensureAudio();
+      voiceGain = ctx.createGain();
+      voiceGain.gain.value = 1.0;
+      voiceGain.connect(ctx.destination);
+    }
+    return voiceGain;
+  }
+  function cutVoice() {
+    for (const s of activeSources) { try { s.stop(); } catch (e) {} }
+    activeSources.length = 0;
+  }
+
   async function scheduleAtom(name, startAt) {
     const ab = await loadAtom(name);
     const ctx = ensureAudio();
@@ -133,9 +154,14 @@
     src.buffer = ab;
     const g = ctx.createGain();
     g.gain.value = 1.0;
-    src.connect(g).connect(ctx.destination);
+    src.connect(g).connect(voiceBus());
     const when = Math.max(startAt, ctx.currentTime + 0.005);
     src.start(when);
+    activeSources.push(src);
+    src.onended = () => {
+      const i = activeSources.indexOf(src);
+      if (i > -1) activeSources.splice(i, 1);
+    };
     return when + ab.duration;
   }
 
@@ -143,6 +169,7 @@
   async function playSequence(names, gap = ATOM_GAP) {
     if (!names.length) return;
     try {
+      cutVoice();                       // new cue replaces any in-flight voice
       const ctx = ensureAudio();
       let t = ctx.currentTime + 0.02;
       for (const name of names) {
@@ -493,6 +520,7 @@
     state.running = false; state.paused = false;
     cancelAnimationFrame(state.raf);
     clearInterval(state.clockTimer);
+    cutVoice();
     stopMusic(); releaseWakeLock();
     setPhaseTheme('idle');
     showScreen(cfgScreen);
