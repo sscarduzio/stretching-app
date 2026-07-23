@@ -38,7 +38,6 @@ export interface Mode {
   primaryType: PhaseType;
   voiceGap: number;
   repTitle: string;
-  primaryLabel: string;
   distPrimaryLabel: string;
   showStretchChip: boolean;
   fields: FieldDef[];
@@ -101,7 +100,6 @@ export const MODES: Record<ModeKey, Mode> = {
     primaryType: 'hold',
     voiceGap: 0.14,
     repTitle: 'Holds',
-    primaryLabel: 'holds',
     distPrimaryLabel: 'Hold',
     showStretchChip: true,
     fields: [
@@ -133,7 +131,7 @@ export const MODES: Record<ModeKey, Mode> = {
     speakCount: (n) => playAtom('count_' + n),
     speakDone: () => playAtom('done'),
     sideBadge: (p) => (p.type === 'hold' ? p.side!.toUpperCase() : p.type === 'recover' ? 'SWITCH' : 'REST'),
-    phaseLabel: (p) => (p.type === 'hold' ? 'STRETCH' : p.type === 'recover' ? 'SWITCH' : 'REST'),
+    phaseLabel: (p) => (p.type === 'hold' ? 'HOLD' : p.type === 'recover' ? 'SWITCH' : 'REST'),
     positionChips: (p, cfg) => ({
       stretch: `Stretch ${p.stretch} / ${cfg.stretches}`,
       round: `Set ${p.round} / ${cfg.sets}`,
@@ -164,7 +162,6 @@ export const MODES: Record<ModeKey, Mode> = {
     primaryType: 'work',
     voiceGap: 0.10,
     repTitle: 'Rounds',
-    primaryLabel: 'rounds',
     distPrimaryLabel: 'Work',
     showStretchChip: false,
     fields: [

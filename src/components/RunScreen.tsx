@@ -50,7 +50,12 @@ function Ring() {
           className="ring-fg" cx="160" cy="160" r="140" pathLength={100}
           style={{ strokeDasharray: 100, strokeDashoffset: 100 * progress }}
         />
-        <circle className="ring-glow" cx="160" cy="160" r="140" />
+        {/* glow tracks the fg dash — a full-circle glow left a muddy residue
+            arc over the drained part of the ring */}
+        <circle
+          className="ring-glow" cx="160" cy="160" r="140" pathLength={100}
+          style={{ strokeDasharray: 100, strokeDashoffset: 100 * progress }}
+        />
       </svg>
       <div className="ring-center">
         <span className="side-badge" style={{ color: badgeColor }}>{isPrep ? 'READY' : mode.sideBadge(phase)}</span>
@@ -159,10 +164,10 @@ export default function RunScreen({ active }: { active: boolean }) {
     <main id="run-screen" className="screen is-active">
       <Topbar />
 
+      {/* position only — the internal "Phase x/y" counter meant nothing to a human */}
       <div className="run-header">
         {chips?.stretch && <span id="stretch-label" className="chip">{chips.stretch}</span>}
         {chips && <span className="chip">{chips.round}</span>}
-        <span className="chip">Phase {Math.min(s.idx + 1, s.plan.length)} / {s.plan.length}</span>
       </div>
 
       <Ring />
@@ -195,10 +200,7 @@ export default function RunScreen({ active }: { active: boolean }) {
             <span className="stat-val">{fmtDur(s.totalTime - s.elapsed)}</span>
             <span className="stat-label">remaining</span>
           </div>
-          <div className="stat">
-            <span className="stat-val">{doneCount} / {s.primaryTotal}</span>
-            <span className="stat-label">{mode.primaryLabel}</span>
-          </div>
+          {/* the primary count lives in one place: the progress-dots card below */}
         </div>
       </section>
 

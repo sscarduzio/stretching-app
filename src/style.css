@@ -223,7 +223,7 @@ html, body {
 
 /* ---------- Run screen ---------- */
 #run-screen { justify-content: space-between; gap: 12px; }
-.run-header { width: 100%; max-width: 460px; display: flex; justify-content: center; gap: 7px; flex-wrap: wrap; }
+.run-header { width: 100%; max-width: 460px; display: flex; justify-content: center; gap: 7px; flex-wrap: wrap; min-height: 28px; }
 .chip {
   font-size: 13px; font-weight: 600; color: var(--muted);
   background: var(--glass); border: 1px solid var(--stroke);
@@ -236,7 +236,9 @@ html, body {
   position: relative; width: min(56vw, 248px); aspect-ratio: 1;
   display: grid; place-items: center;
 }
-.ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+/* overflow visible: the glow (blur + drop-shadow) extends past the viewBox
+   and was getting clipped square at the SVG bounds */
+.ring { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
 .ring circle { fill: none; stroke-width: 16; stroke-linecap: round; }
 .ring-bg { stroke: rgba(255,255,255,.06); }
 .ring-fg {
@@ -262,6 +264,9 @@ html, body {
   font-variant-numeric: tabular-nums; letter-spacing: -0.05em;
   background: linear-gradient(180deg, #fff, #c9d2ff);
   -webkit-background-clip: text; background-clip: text; color: transparent;
+  /* background-clip: text only paints inside the box; with line-height 1 the
+     glyphs can poke out and get sliced — pad the paint area, keep the layout */
+  padding: .12em .08em; margin: -.12em -.08em;
   transition: transform .2s var(--ease);
 }
 .time.tick { animation: tick-pop .3s var(--ease); }
@@ -362,6 +367,7 @@ body[data-phase="rest"] .topbar-live .dot { background: var(--rest); box-shadow:
 .mini-donut { width: 116px; height: 116px; transform: rotate(-90deg); }
 .mini-donut circle { fill: none; stroke-width: 11; stroke-linecap: round; }
 .md-bg { stroke: rgba(255,255,255,.07); }
+.mini-donut { overflow: visible; }
 .md-fg { stroke: url(#ring-grad); stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset .3s linear; filter: drop-shadow(0 0 6px rgba(109,139,255,.5)); }
 .overall-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
 .overall-pct { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
