@@ -2,7 +2,7 @@
 // entry here (plan builder, voice atoms, labels, config fields) — no scattered
 // mode conditionals anywhere else.
 import type { ReactNode } from 'react';
-import { loadAtom, playAtom, playSequence } from './audio';
+import { loadAtom, playAtom } from './audio';
 import { fmtDur, type ModeKey, type Phase, type PhaseType, type Settings } from './store';
 
 export const COMBOS = [
@@ -20,6 +20,17 @@ export interface FieldDef {
   step: number;
 }
 
+// shared "get ready" lead-in, rendered in each mode's Advanced section
+export const PREPARE_FIELD: FieldDef = {
+  key: 'prepare', label: 'Get ready', sub: 'lead-in · 0 = off', min: 0, max: 60, step: 5,
+};
+
+export interface Preset {
+  name: string;
+  sub: string;
+  values: Partial<Settings>;
+}
+
 export interface Mode {
   key: ModeKey;
   brand: { logo: string; title: string; subtitle: string };
@@ -31,10 +42,13 @@ export interface Mode {
   distPrimaryLabel: string;
   showStretchChip: boolean;
   fields: FieldDef[];
+  advanced: FieldDef[];
+  presets: Preset[];
   buildPlan(cfg: Settings): Phase[];
   primaryCount(cfg: Settings): number;
   preload(cfg: Settings): void;
-  speakStart(p: Phase): void;
+  /** voice atoms announcing a primary phase; the phase clock starts when the cue ends */
+  startCue(p: Phase): string[];
   speakRecover(p: Phase): void;
   speakRest(p: Phase): void;
   speakCount(n: number): void;
@@ -47,20 +61,23 @@ export interface Mode {
   doneText(cfg: Settings, totalTime: number): string;
 }
 
+export const planDuration = (plan: Phase[]) => plan.reduce((s, p) => s + p.duration, 0);
+
+// 1 set = hold left → switch → hold right; switch between sets;
+// rest (or a switch, if rest is off) only when moving to the next stretch.
 function buildStretchPlan(cfg: Settings): Phase[] {
   const plan: Phase[] = [];
-  const totalHolds = cfg.stretches * cfg.reps;
-  let holdIndex = 0;
   for (let s = 1; s <= cfg.stretches; s++) {
-    for (let r = 1; r <= cfg.reps; r++) {
-      holdIndex++;
-      const side = r % 2 === 1 ? 'left' : 'right';
-      plan.push({ type: 'hold', stretch: s, round: r, side, duration: cfg.hold });
-      if (holdIndex < totalHolds) {
-        const nextStretch = r === cfg.reps ? s + 1 : s;
-        plan.push({ type: 'recover', stretch: s, round: r, duration: cfg.recover, nextStretch });
-        if (cfg.rest > 0) plan.push({ type: 'rest', stretch: s, round: r, duration: cfg.rest, nextStretch });
-      }
+    for (let set = 1; set <= cfg.sets; set++) {
+      plan.push({ type: 'hold', stretch: s, round: set, side: 'left', duration: cfg.hold });
+      plan.push({ type: 'recover', stretch: s, round: set, duration: cfg.recover, nextStretch: s });
+      plan.push({ type: 'hold', stretch: s, round: set, side: 'right', duration: cfg.hold });
+      if (set < cfg.sets)
+        plan.push({ type: 'recover', stretch: s, round: set, duration: cfg.recover, nextStretch: s });
+    }
+    if (s < cfg.stretches) {
+      if (cfg.rest > 0) plan.push({ type: 'rest', stretch: s, round: cfg.sets, duration: cfg.rest, nextStretch: s + 1 });
+      else plan.push({ type: 'recover', stretch: s, round: cfg.sets, duration: cfg.recover, nextStretch: s + 1 });
     }
   }
   return plan;
@@ -83,27 +100,34 @@ export const MODES: Record<ModeKey, Mode> = {
     themeColor: '#05060f',
     primaryType: 'hold',
     voiceGap: 0.14,
-    repTitle: 'Repetitions',
+    repTitle: 'Holds',
     primaryLabel: 'holds',
     distPrimaryLabel: 'Hold',
     showStretchChip: true,
     fields: [
-      { key: 'hold', label: 'Hold', sub: 'seconds', min: 5, max: 300, step: 5 },
-      { key: 'recover', label: 'Recovery', sub: 'switch sides', min: 1, max: 60, step: 1 },
-      { key: 'rest', label: 'Rest between sides', sub: '0 = off', min: 0, max: 120, step: 5 },
+      { key: 'hold', label: 'Hold', sub: 'seconds per side', min: 5, max: 300, step: 5 },
       { key: 'stretches', label: 'Stretches', sub: 'exercises', min: 1, max: 12, step: 1 },
-      { key: 'reps', label: 'Rounds', sub: 'per stretch', min: 1, max: 20, step: 1 },
+      { key: 'sets', label: 'Sets', sub: 'left + right each', min: 1, max: 10, step: 1 },
+    ],
+    advanced: [
+      { key: 'recover', label: 'Side switch', sub: 'seconds', min: 1, max: 60, step: 1 },
+      { key: 'rest', label: 'Rest between stretches', sub: '0 = off', min: 0, max: 120, step: 5 },
+    ],
+    presets: [
+      { name: 'Quick', sub: '20s · 2×2', values: { hold: 20, stretches: 2, sets: 2 } },
+      { name: 'Daily', sub: '30s · 4×2', values: { hold: 30, stretches: 4, sets: 2 } },
+      { name: 'Deep', sub: '45s · 6×3', values: { hold: 45, stretches: 6, sets: 3 } },
     ],
     buildPlan: buildStretchPlan,
-    primaryCount: (cfg) => cfg.stretches * cfg.reps,
+    primaryCount: (cfg) => cfg.stretches * cfg.sets * 2,
     preload(cfg) {
       const n = new Set(['done', 'relax_switch', 'relax_next', 'rest',
         'left_stretch', 'right_stretch', 'count_1', 'count_2', 'count_3']);
-      for (let r = 1; r <= cfg.reps; r++) n.add('round_' + r);
+      for (let r = 1; r <= cfg.sets; r++) n.add('round_' + r);
       for (let s = 2; s <= cfg.stretches; s++) n.add('rest_stretch_' + s);
       n.forEach((x) => loadAtom(x).catch(() => {}));
     },
-    speakStart: (p) => playSequence(['round_' + p.round, p.side + '_stretch'], 0.14),
+    startCue: (p) => ['round_' + p.round, p.side + '_stretch'],
     speakRecover: (p) => playAtom(p.nextStretch! > p.stretch! ? 'relax_next' : 'relax_switch'),
     speakRest: (p) => playAtom(p.nextStretch! > p.stretch! ? 'rest_stretch_' + p.nextStretch : 'rest'),
     speakCount: (n) => playAtom('count_' + n),
@@ -112,7 +136,7 @@ export const MODES: Record<ModeKey, Mode> = {
     phaseLabel: (p) => (p.type === 'hold' ? 'STRETCH' : p.type === 'recover' ? 'SWITCH' : 'REST'),
     positionChips: (p, cfg) => ({
       stretch: `Stretch ${p.stretch} / ${cfg.stretches}`,
-      round: `Round ${p.round} / ${cfg.reps}`,
+      round: `Set ${p.round} / ${cfg.sets}`,
     }),
     nextCard(next) {
       if (next.type === 'hold') return { icon: '🤸', text: `${next.side} side · stretch` };
@@ -120,20 +144,16 @@ export const MODES: Record<ModeKey, Mode> = {
       return { icon: '💨', text: 'Rest' };
     },
     summary(cfg) {
-      const holds = cfg.stretches * cfg.reps;
-      const rec = Math.max(0, holds - 1);
-      const restN = cfg.rest > 0 ? rec : 0;
-      const total = holds * cfg.hold + rec * cfg.recover + restN * cfg.rest;
+      const total = planDuration(buildStretchPlan(cfg)) + cfg.prepare;
       return (
         <>
-          <b>{holds}</b> holds · <b>{cfg.stretches}</b> stretch{cfg.stretches > 1 ? 'es' : ''} ·{' '}
-          <b>{cfg.reps}</b> round{cfg.reps > 1 ? 's' : ''} each · about <b>{fmtDur(total)}</b>
+          <b>{cfg.stretches}</b> stretch{cfg.stretches > 1 ? 'es' : ''} × <b>{cfg.sets}</b> set{cfg.sets > 1 ? 's' : ''} ·{' '}
+          <b>{cfg.hold}s</b> per side · about <b>{fmtDur(total)}</b>
         </>
       );
     },
     doneText(cfg, totalTime) {
-      const holds = cfg.stretches * cfg.reps;
-      return `${holds} holds across ${cfg.stretches} stretch${cfg.stretches > 1 ? 'es' : ''} · about ${Math.round(totalTime / 60)} min`;
+      return `${cfg.stretches * cfg.sets * 2} holds across ${cfg.stretches} stretch${cfg.stretches > 1 ? 'es' : ''} · about ${Math.round(totalTime / 60)} min`;
     },
   },
 
@@ -149,9 +169,16 @@ export const MODES: Record<ModeKey, Mode> = {
     showStretchChip: false,
     fields: [
       { key: 'boxRounds', label: 'Rounds', sub: 'boxing', min: 1, max: 12, step: 1 },
-      { key: 'boxWork', label: 'Work', sub: 'seconds / round', min: 10, max: 300, step: 5 },
+      { key: 'boxWork', label: 'Round length', sub: 'seconds', min: 10, max: 300, step: 5 },
       { key: 'boxRest', label: 'Rest', sub: 'between rounds · 0 = off', min: 0, max: 120, step: 5 },
-      { key: 'boxCombos', label: 'Combos', sub: 'seconds apart · 0 = off', min: 0, max: 30, step: 1 },
+    ],
+    advanced: [
+      { key: 'boxCombos', label: 'Combo pace', sub: 'seconds apart · 0 = off', min: 0, max: 30, step: 1 },
+    ],
+    presets: [
+      { name: 'Beginner', sub: '4 × 1:00 / 0:30', values: { boxRounds: 4, boxWork: 60, boxRest: 30, boxCombos: 15 } },
+      { name: 'Classic', sub: '6 × 3:00 / 1:00', values: { boxRounds: 6, boxWork: 180, boxRest: 60, boxCombos: 10 } },
+      { name: 'HIIT', sub: '10 × 0:30 / 0:15', values: { boxRounds: 10, boxWork: 30, boxRest: 15, boxCombos: 7 } },
     ],
     buildPlan: buildBoxPlan,
     primaryCount: (cfg) => cfg.boxRounds,
@@ -162,7 +189,7 @@ export const MODES: Record<ModeKey, Mode> = {
       if (cfg.boxCombos > 0) COMBOS.forEach((c) => n.add(c));
       n.forEach((x) => loadAtom(x).catch(() => {}));
     },
-    speakStart: (p) => playSequence(['box_round_' + p.round, 'box_work'], 0.10),
+    startCue: (p) => ['box_round_' + p.round, 'box_work'],
     speakRecover: () => {},
     speakRest: () => playAtom('box_rest'),
     speakCount: (n) => playAtom('box_count_' + n),
@@ -175,17 +202,16 @@ export const MODES: Record<ModeKey, Mode> = {
       return { icon: '💧', text: 'Rest' };
     },
     summary(cfg) {
-      const restN = cfg.boxRest > 0 ? Math.max(0, cfg.boxRounds - 1) : 0;
-      const total = cfg.boxRounds * cfg.boxWork + restN * cfg.boxRest;
+      const total = planDuration(buildBoxPlan(cfg)) + cfg.prepare;
       return (
         <>
-          <b>{cfg.boxRounds}</b> rounds · <b>{cfg.boxWork}s</b> work · <b>{cfg.boxRest}s</b> rest
+          <b>{cfg.boxRounds}</b> rounds · <b>{fmtDur(cfg.boxWork)}</b> work · <b>{fmtDur(cfg.boxRest)}</b> rest
           {cfg.boxCombos > 0 ? ` · combos every ${cfg.boxCombos}s` : ''} · about <b>{fmtDur(total)}</b>
         </>
       );
     },
     doneText(cfg, totalTime) {
-      return `${cfg.boxRounds} rounds · ${cfg.boxWork}s work · about ${Math.round(totalTime / 60)} min`;
+      return `${cfg.boxRounds} rounds · ${fmtDur(cfg.boxWork)} work · about ${Math.round(totalTime / 60)} min`;
     },
   },
 };

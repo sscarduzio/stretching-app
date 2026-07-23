@@ -1,8 +1,8 @@
 // Timer engine — drift-free performance.now() loop, kept outside React.
 // Mutable per-frame state lives in module locals; anything the UI renders is
 // pushed into the zustand store (ring progress at 60fps, dashboard throttled).
-import { beep, cutVoice, ensureAudio, haptic, playAtom, startMusic, stopMusic } from './audio';
-import { COMBOS, MODES } from './modes';
+import { beep, cutVoice, ensureAudio, haptic, playAtom, playSequence, sequenceDuration, startMusic, stopMusic } from './audio';
+import { COMBOS, MODES, PREPARE_FIELD } from './modes';
 import { useApp, type Phase } from './store';
 
 const COUNTDOWN_SECS = 3;      // spoken/beeped "3, 2, 1"
@@ -12,7 +12,7 @@ const COMBO_FIRST_AT = 5;      // first combo this many seconds into a round
 const COMBO_LAST_MARGIN = 6;   // no combo in the last N seconds (protect countdown)
 
 const HAPTICS: Record<string, number | number[]> = {
-  hold: 220, work: 300, recover: [110, 60, 110], rest: [160, 80, 160],
+  prepare: 80, hold: 220, work: 300, recover: [110, 60, 110], rest: [160, 80, 160],
 };
 
 let raf = 0;
@@ -47,7 +47,8 @@ function elapsedTotal(): number {
   const p = s.plan[s.idx];
   if (p) {
     const now = s.paused ? pauseAt : performance.now();
-    done += Math.min((now - phaseStart) / 1000, p.duration);
+    // clamp low: phaseStart can sit in the future during a voice lead-in
+    done += Math.min(Math.max(0, (now - phaseStart) / 1000), p.duration);
   }
   return done;
 }
@@ -63,8 +64,14 @@ function startPhase() {
   comboPlan = []; comboPtr = 0;
 
   if (s.voice) {
-    if (p.type === m.primaryType) m.speakStart(p);
-    else if (p.type === 'recover') m.speakRecover(p);
+    if (p.type === m.primaryType) {
+      // "Round 1, left side… stretch!" — the phase clock starts when the
+      // cue ends, like a real coach. Shift phaseStart by the spoken length.
+      const cue = m.startCue(p);
+      void playSequence(cue, m.voiceGap);
+      const lead = sequenceDuration(cue, m.voiceGap);
+      if (lead) phaseStart += lead * 1000;
+    } else if (p.type === 'recover') m.speakRecover(p);
     else if (p.type === 'rest') m.speakRest(p);
   }
   haptic(HAPTICS[p.type] ?? 0);
@@ -100,7 +107,8 @@ function tick() {
   const p = s.plan[s.idx];
   if (!p) return finish();
   const m = mode();
-  const elapsed = (performance.now() - phaseStart) / 1000;
+  // clamped at 0: during a voice lead-in the clock holds at full duration
+  const elapsed = Math.max(0, (performance.now() - phaseStart) / 1000);
   const remaining = p.duration - elapsed;
   const display = Math.max(0, Math.ceil(remaining));
 
@@ -138,12 +146,13 @@ export function buildPlan(): Phase[] {
 export function start() {
   const m = mode();
   // typed values may sit outside bounds until blur — clamp before planning
-  st().set(Object.fromEntries(m.fields.map((f) => {
+  st().set(Object.fromEntries([...m.fields, ...m.advanced, PREPARE_FIELD].map((f) => {
     const v = st()[f.key] as number;
     return [f.key, Math.min(f.max, Math.max(f.min, Number.isFinite(v) ? v : f.min))];
   })));
   const s = st();
   const plan = buildPlan();
+  if (s.prepare > 0) plan.unshift({ type: 'prepare', duration: s.prepare });
   s.set({
     plan, idx: 0,
     running: true, paused: false, finished: false,

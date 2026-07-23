@@ -1,7 +1,7 @@
 import { beep, setMusicVolume } from './../audio';
 import { start } from '../engine';
-import { MODES, type FieldDef } from '../modes';
-import { useApp, useSettings } from '../store';
+import { MODES, PREPARE_FIELD, type FieldDef, type Preset } from '../modes';
+import { useApp, useSettings, type Settings } from '../store';
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
@@ -31,17 +31,40 @@ function Stepper({ f }: { f: FieldDef }) {
   );
 }
 
-function Toggle({ k, label }: { k: 'voice' | 'beeps' | 'vibrate' | 'music'; label: string }) {
+function PresetChip({ p, settings }: { p: Preset; settings: Settings }) {
+  const active = Object.entries(p.values).every(([k, v]) => settings[k as keyof Settings] === v);
+  return (
+    <button
+      type="button"
+      className={`preset${active ? ' on' : ''}`}
+      aria-pressed={active}
+      onClick={() => { useApp.getState().set(p.values); beep(660, 0.05); }}
+    >
+      <b>{p.name}</b>
+      <small>{p.sub}</small>
+    </button>
+  );
+}
+
+const SOUND_CHIPS = [
+  { k: 'voice', icon: '🔊', label: 'Voice' },
+  { k: 'beeps', icon: '⏱️', label: 'Beeps' },
+  { k: 'vibrate', icon: '📳', label: 'Haptics' },
+  { k: 'music', icon: '🎵', label: 'Music' },
+] as const;
+
+function SoundChip({ k, icon, label }: (typeof SOUND_CHIPS)[number]) {
   const on = useApp((s) => s[k]);
   return (
-    <label className="toggle" htmlFor={`opt-${k}`}>
+    <button
+      type="button"
+      className={`schip${on ? ' on' : ''}`}
+      aria-pressed={on}
+      onClick={() => useApp.getState().set({ [k]: !on })}
+    >
+      <span className="ico">{icon}</span>
       <span>{label}</span>
-      <input
-        type="checkbox" id={`opt-${k}`} checked={on}
-        onChange={(e) => useApp.getState().set({ [k]: e.target.checked })}
-      />
-      <span className="switch" />
-    </label>
+    </button>
   );
 }
 
@@ -74,24 +97,39 @@ export default function ConfigScreen({ active }: { active: boolean }) {
         <p className="subtitle">{m.brand.subtitle}</p>
       </header>
 
-      <section className="glass card">
-        {m.fields.map((f) => <Stepper key={f.key} f={f} />)}
-      </section>
-
-      <section className="glass card toggles">
-        <Toggle k="voice" label="🔊 Voice cues" />
-        <Toggle k="beeps" label="⏱️ Countdown beeps" />
-        <Toggle k="vibrate" label="📳 Vibration" />
-        <Toggle k="music" label="🎵 Background music" />
-        {settings.music && (
-          <div className="vol-row">
-            <label htmlFor="cfg-vol">Volume</label>
-            <VolumeSlider id="cfg-vol" />
+      <div className="cfg-grid">
+        <div className="cfg-col">
+          <div className="preset-row" role="group" aria-label="Presets">
+            {m.presets.map((p) => <PresetChip key={p.name} p={p} settings={settings} />)}
           </div>
-        )}
-      </section>
 
-      <p className="summary">{m.summary(settings)}</p>
+          <section className="glass card">
+            {m.fields.map((f) => <Stepper key={f.key} f={f} />)}
+          </section>
+        </div>
+
+        <div className="cfg-col">
+          <section className="glass card sound-card">
+            <div className="sound-chips">
+              {SOUND_CHIPS.map((c) => <SoundChip key={c.k} {...c} />)}
+            </div>
+            {settings.music && (
+              <div className="vol-row">
+                <label htmlFor="cfg-vol">Volume</label>
+                <VolumeSlider id="cfg-vol" />
+              </div>
+            )}
+          </section>
+
+          <details className="glass card advanced">
+            <summary>Advanced</summary>
+            {m.advanced.map((f) => <Stepper key={f.key} f={f} />)}
+            <Stepper f={PREPARE_FIELD} />
+          </details>
+
+          <p className="summary">{m.summary(settings)}</p>
+        </div>
+      </div>
 
       <button className="primary" onClick={start}><span>Start</span></button>
       <p className="hint">Screen stays awake · saved on this device</p>

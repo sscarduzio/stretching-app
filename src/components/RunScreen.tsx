@@ -33,6 +33,7 @@ function Ring() {
   const phase = useApp((s) => s.plan[Math.min(s.idx, s.plan.length - 1)]);
   const mode = useApp((s) => MODES[s.mode]);
   if (!phase) return null;
+  const isPrep = phase.type === 'prepare';
   const badgeColor = phase.type === 'rest' ? 'var(--rest)'
     : phase.type === 'recover' ? 'var(--muted)' : 'var(--accent)';
   return (
@@ -52,10 +53,10 @@ function Ring() {
         <circle className="ring-glow" cx="160" cy="160" r="140" />
       </svg>
       <div className="ring-center">
-        <span className="side-badge" style={{ color: badgeColor }}>{mode.sideBadge(phase)}</span>
+        <span className="side-badge" style={{ color: badgeColor }}>{isPrep ? 'READY' : mode.sideBadge(phase)}</span>
         {/* key remounts the digit so the tick-pop animation replays every second */}
         <span key={display} className="time tick">{display}</span>
-        <span className="phase-label">{mode.phaseLabel(phase)}</span>
+        <span className="phase-label">{isPrep ? 'GET READY' : mode.phaseLabel(phase)}</span>
       </div>
     </div>
   );
@@ -64,7 +65,9 @@ function Ring() {
 function NextCard() {
   const next = useApp((s) => s.plan[s.idx + 1]);
   const mode = useApp((s) => MODES[s.mode]);
-  const c = next ? mode.nextCard(next) : { icon: '🎉', text: 'Finish' };
+  const c = !next ? { icon: '🎉', text: 'Finish' }
+    : next.type === 'prepare' ? { icon: '🚦', text: 'Get ready' }
+    : mode.nextCard(next);
   return (
     <div className="next-card glass">
       <span className="next-kicker">UP NEXT</span>
@@ -79,7 +82,7 @@ function NextCard() {
 
 function RepGrid({ done, current }: { done: number; current: number }) {
   const stretches = useApp((s) => s.stretches);
-  const reps = useApp((s) => s.reps);
+  const holdsPerStretch = useApp((s) => s.sets * 2);
   const primaryTotal = useApp((s) => s.primaryTotal);
   const mode = useApp((s) => MODES[s.mode]);
 
@@ -95,7 +98,7 @@ function RepGrid({ done, current }: { done: number; current: number }) {
             <div key={s} className="rep-group">
               <span className="rep-group-label">S{s + 1}</span>
               <div className="rep-dots">
-                {Array.from({ length: reps }, (_, r) => dot(s * reps + r))}
+                {Array.from({ length: holdsPerStretch }, (_, r) => dot(s * holdsPerStretch + r))}
               </div>
             </div>
           ))
@@ -115,7 +118,7 @@ function DistBar() {
   for (const p of plan) {
     if (p.type === mode.primaryType) prim += p.duration;
     else if (p.type === 'recover') rec += p.duration;
-    else if (p.type === 'rest') rest += p.duration;
+    else if (p.type === 'rest' || p.type === 'prepare') rest += p.duration;
   }
   const total = prim + rec + rest || 1;
   return (
@@ -150,15 +153,15 @@ export default function RunScreen({ active }: { active: boolean }) {
   const doneCount = s.plan.slice(0, s.idx).filter((p) => p.type === mode.primaryType).length;
   const current = s.plan[s.idx]?.type === mode.primaryType ? doneCount : -1;
   const pct = s.totalTime > 0 ? s.elapsed / s.totalTime : 0;
-  const chips = mode.positionChips(phase, settings);
+  const chips = phase.type === 'prepare' ? null : mode.positionChips(phase, settings);
 
   return (
     <main id="run-screen" className="screen is-active">
       <Topbar />
 
       <div className="run-header">
-        {chips.stretch && <span id="stretch-label" className="chip">{chips.stretch}</span>}
-        <span className="chip">{chips.round}</span>
+        {chips?.stretch && <span id="stretch-label" className="chip">{chips.stretch}</span>}
+        {chips && <span className="chip">{chips.round}</span>}
         <span className="chip">Phase {Math.min(s.idx + 1, s.plan.length)} / {s.plan.length}</span>
       </div>
 

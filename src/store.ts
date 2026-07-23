@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { useShallow } from 'zustand/react/shallow';
 
 export type ModeKey = 'stretch' | 'box';
-export type PhaseType = 'hold' | 'recover' | 'rest' | 'work';
+export type PhaseType = 'prepare' | 'hold' | 'recover' | 'rest' | 'work';
 
 export interface Phase {
   type: PhaseType;
@@ -17,28 +17,38 @@ export interface Phase {
 
 export interface Settings {
   mode: ModeKey;
-  hold: number; recover: number; rest: number; stretches: number; reps: number;
+  // stretch: 1 set = left + right; rest fires only between stretches (exercises)
+  hold: number; recover: number; rest: number; stretches: number; sets: number;
   boxRounds: number; boxWork: number; boxRest: number; boxCombos: number;
+  prepare: number; // "get ready" lead-in before the first phase, 0 = off
   voice: boolean; beeps: boolean; vibrate: boolean; music: boolean; volume: number;
 }
 
 export const DEFAULTS: Settings = {
   mode: 'stretch',
-  hold: 30, recover: 5, rest: 0, stretches: 1, reps: 10,
+  hold: 30, recover: 5, rest: 15, stretches: 1, sets: 5,
   boxRounds: 6, boxWork: 60, boxRest: 20, boxCombos: 15,
+  prepare: 10,
   voice: true, beeps: true, vibrate: true, music: false, volume: 0.35,
 };
 
 const SETTINGS_KEYS = Object.keys(DEFAULTS) as (keyof Settings)[];
 
-// one-shot migration from the pre-React localStorage format
+// one-shot migration from earlier localStorage formats (v6 = React port,
+// v5 = pre-React). Old "reps" counted single sides → sets = ceil(reps/2).
+// Old "rest" meant rest-between-sides (different semantics) → dropped.
 function legacySettings(): Partial<Settings> {
-  try {
-    const raw = localStorage.getItem('stretchTimer.settings.v5');
-    return raw ? (JSON.parse(raw) as Partial<Settings>) : {};
-  } catch {
-    return {};
-  }
+  const read = (k: string): Record<string, unknown> | null => {
+    try { const raw = localStorage.getItem(k); return raw ? JSON.parse(raw) : null; } catch { return null; }
+  };
+  const v6 = read('stretchTimer.settings.v6') as { state?: Record<string, unknown> } | null;
+  const old = v6?.state ?? read('stretchTimer.settings.v5');
+  if (!old) return {};
+  const out: Record<string, unknown> = {};
+  for (const k of SETTINGS_KEYS) if (k in old) out[k] = old[k];
+  delete out.rest;
+  if (typeof old.reps === 'number') out.sets = Math.min(10, Math.max(1, Math.ceil(old.reps / 2)));
+  return out as Partial<Settings>;
 }
 
 interface Session {
@@ -69,7 +79,7 @@ export const useApp = create<AppState>()(
       set,
     }),
     {
-      name: 'stretchTimer.settings.v6',
+      name: 'stretchTimer.settings.v7',
       partialize: (s) => Object.fromEntries(SETTINGS_KEYS.map((k) => [k, s[k]])),
     },
   ),

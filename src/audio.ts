@@ -101,6 +101,18 @@ export async function playSequence(names: string[], gap: number): Promise<void> 
 
 export const playAtom = (name: string) => playSequence([name], 0);
 
+// Total spoken length of a cue, from decoded buffers. Null if any atom isn't
+// cached yet (first seconds of a cold start) — callers then skip the shift.
+export function sequenceDuration(names: string[], gap: number): number | null {
+  let d = 0.02;
+  for (const n of names) {
+    const b = atomCache.get(n);
+    if (!b) return null;
+    d += b.duration + gap;
+  }
+  return d - gap;
+}
+
 /* ---------- Background music (real track, procedural pad fallback) ---------- */
 const tracks: Record<'stretch' | 'box', HTMLAudioElement> = {
   stretch: new Audio('audio/happy-summer-116584.mp3'),

@@ -73,10 +73,16 @@ Deploys to GitHub Pages automatically on push to `main` (`.github/workflows/depl
 
 ## Config
 
-**Stretch:** Hold · Recovery · Rest between sides · Stretches · Rounds. Defaults: 30 s hold, 5 s recovery, 10 rounds.
-**Boxe:** Rounds · Work sec/round · Rest between · Combo pace. Defaults: 6 rounds, 60 s work, 20 s rest, combos every 15 s.
+One row of trainer-authored **presets** per mode (Stretch: Quick / Daily / Deep · Boxe: Beginner / Classic / HIIT), then only the knobs that matter:
 
-Plus toggles: Voice cues · Countdown beeps · Vibration · Background music (with a live volume slider on both the setup and run screens).
+**Stretch:** Hold (per side) · Stretches (exercises) · Sets (1 set = left + right). Defaults: 30 s × 1 stretch × 5 sets.
+**Boxe:** Rounds · Round length · Rest. Defaults: 6 × 60 s / 20 s.
+
+**Advanced** (collapsed): Side switch time · Rest between stretches (fires only when moving to the next exercise) · Combo pace · **Get ready** — a 10 s amber lead-in before the first phase so you can put the phone down and get into position.
+
+Voice cues announce a phase like a coach — "Round 1, left side… stretch!" — and the phase clock starts when the sentence ends, not while she's talking.
+
+Sound controls are a compact chip row: 🔊 Voice · ⏱ Beeps · 📳 Haptics · 🎵 Music (volume slider on both the setup and run screens).
 
 ## License
 
