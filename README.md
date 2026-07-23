@@ -31,7 +31,14 @@ All atoms are **loudness-normalized to -16 LUFS** (EBU R128, two-pass `ffmpeg lo
 **Boxe atoms:** `box_round_1..12`, `box_work`, `box_rest`, `box_combo_*` (1-2, 1-2-3, 2-3-2, slip, roll, jab-to-body, double jab, hooks…), `box_count_1..3`, `box_done`.
 
 ### Architecture
-The app is one IIFE (`app.js`) with a `MODES` table that holds all per-mode behavior (plan builder, voice atom names, labels, theme, summary, done text). Adding a third workout mode is an entry in `MODES` plus a plan builder — no scattered mode conditionals. Numeric config fields are declared once in a `FIELDS` schema (id + min + max), which drives `readConfig`/`applyConfigToInputs`; the HTML `min`/`max` attributes match it.
+React + TypeScript + Vite, with [zustand](https://github.com/pmndrs/zustand) for state (settings persisted to localStorage via its `persist` middleware).
+
+- `src/engine.ts` — the drift-free timer loop, kept **outside React**. Mutable per-frame state lives in module locals; anything the UI renders is pushed into the store (ring progress at 60 fps, dashboard throttled to ~4 fps).
+- `src/modes.tsx` — the `MODES` table holds all per-mode behavior (plan builder, config field schema, voice atom names, labels, theme, summary, done text). Adding a third workout mode is an entry here — no scattered mode conditionals.
+- `src/audio.ts` — Web Audio: beeps, the voice-atom bus (compressor chain), background music + procedural pad fallback.
+- `src/store.ts` — settings + session state; components subscribe with selectors.
+- `src/components/` — `ConfigScreen` (fields rendered from the mode's schema), `RunScreen` (dashboard derived from `plan`/`idx`/`elapsed`), `DoneOverlay`.
+- `src/style.css` — the original hand-rolled design system (CSS custom properties, `body[data-mode]`/`body[data-phase]` theming) carried over unchanged.
 
 ## Regenerating the voice
 
@@ -47,8 +54,12 @@ The script is idempotent (skips existing files). Per-theme voice/speed/direction
 
 ```bash
 cd stretching-app
-python3 -m http.server 8080    # visit http://localhost:8080 (or your LAN IP from a phone)
+npm install
+npm run dev        # dev server (add --host to reach it from a phone on your LAN)
+npm run build      # type-check + production build to dist/
 ```
+
+Deploys to GitHub Pages automatically on push to `main` (`.github/workflows/deploy.yml`).
 
 ## Controls
 
