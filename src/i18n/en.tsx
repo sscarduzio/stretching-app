@@ -85,8 +85,8 @@ export const en = {
     what: 'A free interval timer with two souls: calm stretching and shadow boxe. It comes with a real coach voice, handy presets, and a live dashboard that keeps count so you don’t have to.',
     who: 'It’s for anyone who stretches or shadow-boxes at home or at the gym. Coaches, you’re covered too: share a whole workout just by sending the URL.',
     why: 'No ads, no accounts, no subscription. It works fully offline once loaded, installs right on your home screen, and the timer only starts counting when the coach finishes talking — like a real trainer would.',
-    madeBy: 'Made by Simone Scarduzio',
-    production: 'A Beshu Limited (UK) production',
+    madeBy: 'Simone Scarduzio on X',
+    production: 'Beshu Limited (UK) — beshu.tech',
     close: 'Close',
   },
 

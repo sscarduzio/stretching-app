@@ -479,7 +479,16 @@ body[data-phase="done"] .info-btn { display: none; }
   color: var(--accent-2); font-weight: 600;
   text-decoration: underline; text-underline-offset: 3px;
 }
-.about-credits { display: flex; flex-direction: column; gap: 5px; }
+.about-credits { display: flex; justify-content: center; gap: 14px; margin: 4px 0 22px; }
+.icon-link {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: grid; place-items: center;
+  color: var(--muted); border: 1px solid var(--stroke-soft);
+  background: rgba(255,255,255,.045);
+  transition: color .2s, border-color .2s, transform .1s var(--ease);
+}
+.icon-link:hover, .icon-link:focus-visible { color: var(--text); border-color: var(--stroke); }
+.icon-link:active { transform: scale(.92); }
 .about-card .primary { margin-top: 10px; }
 
 /* ============================================================
