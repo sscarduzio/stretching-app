@@ -1,7 +1,7 @@
 // Timer engine — drift-free performance.now() loop, kept outside React.
 // Mutable per-frame state lives in module locals; anything the UI renders is
 // pushed into the zustand store (ring progress at 60fps, dashboard throttled).
-import { beep, clapper, cutVoice, ensureAudio, haptic, playAtom, playSequence, sequenceDuration, startMusic, stopMusic } from './audio';
+import { beep, clapper, cutVoice, ensureAudio, haptic, pauseMusic, playAtom, playSequence, restartMusic, sequenceDuration, startMusic, stopMusic } from './audio';
 import { COMBOS, MODES, PREPARE_FIELD } from './modes';
 import { useApp, type Phase } from './store';
 
@@ -76,6 +76,12 @@ function startPhase() {
     else if (p.type === 'rest') m.speakRest(p);
   }
   haptic(HAPTICS[p.type] ?? 0);
+
+  // boxe: track restarts with each round, silence between rounds
+  if (m.musicFollowsRounds && s.music) {
+    if (p.type === m.primaryType) restartMusic();
+    else pauseMusic();
+  }
 
   // schedule combo calls during a boxing work round
   if (p.type === 'work' && s.boxCombos > 0 && s.voice) {
@@ -171,7 +177,7 @@ export function start() {
   lastDash = 0;
   ensureAudio();
   m.preload(s);
-  startMusic();
+  if (!m.musicFollowsRounds) startMusic(); // round-scoped music starts per phase
   void requestWakeLock();
   startPhase();
 }

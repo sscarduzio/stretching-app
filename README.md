@@ -93,6 +93,10 @@ UI strings live in `src/i18n/` as typed dictionaries — `en.tsx` is the referen
 
 Adding a language: copy `src/i18n/en.tsx`, translate the values (plural rules are plain functions — each locale owns its own grammar), register it in `src/i18n/index.ts`. The spoken voice cues are pre-generated audio and stay English until per-locale atoms are generated with `scripts/generate-voice.sh`.
 
+## Credits
+
+10-second clapper built from ["Close claves" by LloydEvans09](https://freesound.org/people/LloydEvans09/sounds/186992/) (CC0). Music tracks from Pixabay.
+
 ## License
 
 MIT — do whatever you like.

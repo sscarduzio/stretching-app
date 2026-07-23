@@ -26,9 +26,22 @@ export function beep(freq = 880, dur = 0.14): void {
   osc.start(t); osc.stop(t + dur + 0.03);
 }
 
-// boxing 10-second warning: three quick clacks
+// boxing 10-second warning — a real recorded triple clack (box_clapper atom,
+// built from CC0 claves), played hot through the voice bus so it cuts above
+// the music WITHOUT interrupting an in-flight combo call. Beeps fall back
+// if the atom hasn't loaded (e.g. first cold run).
 export function clapper(): void {
-  [0, 140, 280].forEach((ms) => setTimeout(() => beep(1046, 0.09), ms));
+  if (!cfg().beeps) return;
+  loadAtom('box_clapper')
+    .then((ab) => {
+      const ctx = ensureAudio();
+      const src = ctx.createBufferSource();
+      src.buffer = ab;
+      const g = ctx.createGain(); g.gain.value = 1.6;
+      src.connect(g).connect(voiceBus());
+      src.start();
+    })
+    .catch(() => { [0, 160, 320].forEach((ms) => setTimeout(() => beep(1046, 0.09), ms)); });
 }
 
 export function haptic(p: number | number[]): void {
@@ -135,6 +148,25 @@ export function startMusic(): void {
   const a = tracks[cfg().mode];
   a.volume = cfg().volume;
   a.play().catch(() => startPadFallback());
+}
+
+// round-scoped music (boxe): from the top at each round…
+export function restartMusic(): void {
+  if (!cfg().music) return;
+  stopPadFallback();
+  const a = tracks[cfg().mode];
+  a.currentTime = 0;
+  a.volume = cfg().volume;
+  musicOn = true;
+  a.play().catch(() => startPadFallback());
+}
+
+// …and silence during rest
+export function pauseMusic(): void {
+  if (!musicOn) return;
+  Object.values(tracks).forEach((a) => a.pause());
+  stopPadFallback();
+  musicOn = false;
 }
 
 export function stopMusic(): void {
