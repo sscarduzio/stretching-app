@@ -58,6 +58,16 @@ html, body {
 @keyframes drift2 { to { transform: translate(-7vw, 6vh) scale(1.08); } }
 @keyframes drift3 { to { transform: translate(5vw, -8vh) scale(1.15); } }
 
+/* photographic mode backgrounds — desaturated and hue-tinted at build time
+   (ffmpeg: grayscale -> channel tint -> vignette), so phones pay no filter cost.
+   stretch = indigo dusk yoga, boxe = ember ring walk */
+.aurora::before {
+  content: ""; position: absolute; inset: 0;
+  background: center / cover no-repeat url('./assets/bg-stretch.jpg');
+  opacity: .38;
+}
+body[data-mode="boxe"] .aurora::before { background-image: url('./assets/bg-boxe.jpg'); }
+
 /* subtle film grain to soften banding */
 .grain {
   position: absolute; inset: 0;

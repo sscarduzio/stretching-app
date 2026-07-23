@@ -95,7 +95,7 @@ Adding a language: copy `src/i18n/en.tsx`, translate the values (plural rules ar
 
 ## Credits
 
-10-second clapper built from ["Close claves" by LloydEvans09](https://freesound.org/people/LloydEvans09/sounds/186992/) (CC0). Music tracks from Pixabay.
+Background photos from Unsplash: [boxe — ring walk](https://unsplash.com/photos/ig7vN6OkGNE) and [stretch — dusk yoga](https://unsplash.com/photos/F2qh3yjz6Jk), regraded (desaturated + hue tint). 10-second clapper built from ["Close claves" by LloydEvans09](https://freesound.org/people/LloydEvans09/sounds/186992/) (CC0). Music tracks from Pixabay.
 
 ## License
 

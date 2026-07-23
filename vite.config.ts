@@ -13,7 +13,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       manifest: false, // public/manifest.json is hand-maintained
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg}', 'audio/voice/*.mp3'],
+        globPatterns: ['**/*.{js,css,html,svg,jpg}', 'audio/voice/*.mp3'],
         runtimeCaching: [
           {
             urlPattern: /\/audio\/[^/]+\.mp3$/,
