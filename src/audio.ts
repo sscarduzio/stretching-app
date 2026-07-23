@@ -114,9 +114,9 @@ export function sequenceDuration(names: string[], gap: number): number | null {
 }
 
 /* ---------- Background music (real track, procedural pad fallback) ---------- */
-const tracks: Record<'stretch' | 'box', HTMLAudioElement> = {
+const tracks: Record<'stretch' | 'boxe', HTMLAudioElement> = {
   stretch: new Audio('audio/happy-summer-116584.mp3'),
-  box: new Audio('audio/shadow-boxing-476827.mp3'),
+  boxe: new Audio('audio/shadow-boxing-476827.mp3'),
 };
 Object.values(tracks).forEach((a) => { a.loop = true; a.preload = 'auto'; });
 

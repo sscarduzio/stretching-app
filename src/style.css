@@ -416,12 +416,12 @@ body[data-phase="recover"] .rep-dot.done { box-shadow: 0 0 6px rgba(52,211,153,.
 /* ring gradient stops — themed per mode (CSS overrides SVG attr) */
 #grad-start { stop-color: #ff7a7a; }
 #grad-end   { stop-color: #ff3d6e; }
-body[data-mode="box"] #grad-start { stop-color: #ffb84d; }
-body[data-mode="box"] #grad-end   { stop-color: #ff4d3d; }
+body[data-mode="boxe"] #grad-start { stop-color: #ffb84d; }
+body[data-mode="boxe"] #grad-end   { stop-color: #ff4d3d; }
 
 /* box mode hides stretch-only UI (chip + recover legend) */
-body[data-mode="box"] #stretch-label { display: none; }
-body[data-mode="box"] #lg-recover-wrap { display: none; }
+body[data-mode="boxe"] #stretch-label { display: none; }
+body[data-mode="boxe"] #lg-recover-wrap { display: none; }
 
 .mode-switch {
   position: fixed; top: calc(var(--safe-top) + 10px); right: 14px;
@@ -438,7 +438,7 @@ body[data-mode="box"] #lg-recover-wrap { display: none; }
   background: linear-gradient(135deg, #6d8bff, #4f6ae0); color: #fff;
   box-shadow: 0 3px 12px rgba(79,106,224,.4);
 }
-body[data-mode="box"] .mode-btn.is-active {
+body[data-mode="boxe"] .mode-btn.is-active {
   background: linear-gradient(135deg, #ff6b3d, #ff4d3d); color: #fff;
   box-shadow: 0 3px 12px rgba(255,77,61,.4);
 }
@@ -450,52 +450,52 @@ body[data-phase="rest"] .mode-switch,
 body[data-phase="done"] .mode-switch { display: none; }
 
 /* ============================================================
-   BOXING THEME  (body[data-mode="box"])
+   BOXING THEME  (body[data-mode="boxe"])
    ============================================================ */
-body[data-mode="box"] {
+body[data-mode="boxe"] {
   --accent: #ff4d3d;
   --accent-2: #ff8a3d;
 }
-body[data-mode="box"] .aurora {
+body[data-mode="boxe"] .aurora {
   background: radial-gradient(140% 100% at 50% 0%, #1c0a08, var(--bg) 60%);
 }
-body[data-mode="box"] .orb-a { background: radial-gradient(circle at 30% 30%, #ff4d3d, transparent 65%); }
-body[data-mode="box"] .orb-b { background: radial-gradient(circle at 60% 40%, #ff8a3d, transparent 65%); }
-body[data-mode="box"] .orb-c { background: radial-gradient(circle at 50% 50%, #ffcc4d, transparent 65%); }
-body[data-mode="box"] .logo-ring { background: conic-gradient(from 220deg, #ff4d3d, #ff8a3d, #ffcc4d, #ff4d3d); }
-body[data-mode="box"] .brand h1 span { color: var(--accent-2); }
-body[data-mode="box"] .primary {
+body[data-mode="boxe"] .orb-a { background: radial-gradient(circle at 30% 30%, #ff4d3d, transparent 65%); }
+body[data-mode="boxe"] .orb-b { background: radial-gradient(circle at 60% 40%, #ff8a3d, transparent 65%); }
+body[data-mode="boxe"] .orb-c { background: radial-gradient(circle at 50% 50%, #ffcc4d, transparent 65%); }
+body[data-mode="boxe"] .logo-ring { background: conic-gradient(from 220deg, #ff4d3d, #ff8a3d, #ffcc4d, #ff4d3d); }
+body[data-mode="boxe"] .brand h1 span { color: var(--accent-2); }
+body[data-mode="boxe"] .primary {
   background: linear-gradient(135deg, #ff6b3d, #ff4d3d);
   box-shadow: 0 12px 34px rgba(255,77,61,.45), inset 0 1px 0 rgba(255,255,255,.25);
 }
-body[data-mode="box"] .primary:active { box-shadow: 0 6px 20px rgba(255,77,61,.4); }
-body[data-mode="box"] .toggle input:checked + .switch { background: linear-gradient(135deg, var(--accent-2), var(--accent)); }
-body[data-mode="box"] .stepper button:active { box-shadow: 0 0 18px rgba(255,77,61,.4); }
-body[data-mode="box"] .ctrl:active { box-shadow: 0 0 18px rgba(255,77,61,.35); }
+body[data-mode="boxe"] .primary:active { box-shadow: 0 6px 20px rgba(255,77,61,.4); }
+body[data-mode="boxe"] .toggle input:checked + .switch { background: linear-gradient(135deg, var(--accent-2), var(--accent)); }
+body[data-mode="boxe"] .stepper button:active { box-shadow: 0 0 18px rgba(255,77,61,.4); }
+body[data-mode="boxe"] .ctrl:active { box-shadow: 0 0 18px rgba(255,77,61,.35); }
 
 /* boxing phase theming */
-body[data-mode="box"][data-phase="work"] { --accent: #ff4d3d; --accent-2: #ff8a3d; }
-body[data-mode="box"][data-phase="work"] .ring-fg { filter: drop-shadow(0 0 16px rgba(255,77,61,.6)); }
-body[data-mode="box"][data-phase="work"] .ring-glow { animation: breathe 2.4s ease-in-out infinite; }
-body[data-mode="box"][data-phase="rest"] { --accent: #5b8aff; --accent-2: #6d8bff; }
-body[data-mode="box"][data-phase="rest"] .ring-fg { filter: drop-shadow(0 0 16px rgba(91,138,255,.5)); }
-body[data-mode="box"][data-phase="rest"] .ring-glow { animation: breathe 3s ease-in-out infinite; }
+body[data-mode="boxe"][data-phase="work"] { --accent: #ff4d3d; --accent-2: #ff8a3d; }
+body[data-mode="boxe"][data-phase="work"] .ring-fg { filter: drop-shadow(0 0 16px rgba(255,77,61,.6)); }
+body[data-mode="boxe"][data-phase="work"] .ring-glow { animation: breathe 2.4s ease-in-out infinite; }
+body[data-mode="boxe"][data-phase="rest"] { --accent: #5b8aff; --accent-2: #6d8bff; }
+body[data-mode="boxe"][data-phase="rest"] .ring-fg { filter: drop-shadow(0 0 16px rgba(91,138,255,.5)); }
+body[data-mode="boxe"][data-phase="rest"] .ring-glow { animation: breathe 3s ease-in-out infinite; }
 
 /* boxing time-split bar (work = orange/red, rest = blue) */
-body[data-mode="box"] .dist-seg.hold { background: linear-gradient(90deg, #ff8a3d, #ff4d3d); }
-body[data-mode="box"] .dist-seg.rest { background: linear-gradient(90deg, #5b8aff, #6d8bff); }
-body[data-mode="box"] .lg.hold i { background: #ff6b3d; }
-body[data-mode="box"] .lg.rest i { background: #5b8aff; }
+body[data-mode="boxe"] .dist-seg.hold { background: linear-gradient(90deg, #ff8a3d, #ff4d3d); }
+body[data-mode="boxe"] .dist-seg.rest { background: linear-gradient(90deg, #5b8aff, #6d8bff); }
+body[data-mode="boxe"] .lg.hold i { background: #ff6b3d; }
+body[data-mode="boxe"] .lg.rest i { background: #5b8aff; }
 
 /* boxing rep dots (round dots glow orange) */
-body[data-mode="box"] .rep-dot.done {
+body[data-mode="boxe"] .rep-dot.done {
   background: linear-gradient(135deg, var(--accent-2), var(--accent));
   box-shadow: 0 0 6px rgba(255,77,61,.45);
 }
-body[data-mode="box"][data-phase="rest"] .rep-dot.done { box-shadow: 0 0 6px rgba(91,138,255,.4); }
+body[data-mode="boxe"][data-phase="rest"] .rep-dot.done { box-shadow: 0 0 6px rgba(91,138,255,.4); }
 
 /* boxing done overlay accent */
-body[data-mode="box"] .overlay-card h2 { color: var(--accent-2); }
+body[data-mode="boxe"] .overlay-card h2 { color: var(--accent-2); }
 
 /* ============================================================
    CONFIG RESTRUCTURE — presets · sound chips · advanced

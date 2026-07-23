@@ -157,8 +157,8 @@ export const MODES: Record<ModeKey, Mode> = {
     },
   },
 
-  box: {
-    key: 'box',
+  boxe: {
+    key: 'boxe',
     brand: { logo: '🥊', title: 'Boxe', subtitle: 'Shadow boxe · combos · rounds' },
     themeColor: '#100604',
     primaryType: 'work',

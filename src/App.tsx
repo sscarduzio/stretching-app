@@ -48,6 +48,7 @@ export default function App() {
   // the CSS theming contract: body[data-mode] + body[data-phase]
   useEffect(() => {
     document.body.dataset.mode = mode;
+    document.title = `${MODES[mode].brand.title} · Stretch & Boxe Timer`;
     document.querySelector('#theme-color-meta')?.setAttribute('content', MODES[mode].themeColor);
   }, [mode]);
 

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useShallow } from 'zustand/react/shallow';
 
-export type ModeKey = 'stretch' | 'box';
+export type ModeKey = 'stretch' | 'boxe';
 export type PhaseType = 'prepare' | 'hold' | 'recover' | 'rest' | 'work';
 
 export interface Phase {
@@ -47,6 +47,7 @@ function legacySettings(): Partial<Settings> {
   const out: Record<string, unknown> = {};
   for (const k of SETTINGS_KEYS) if (k in old) out[k] = old[k];
   delete out.rest;
+  if (out.mode === 'box') out.mode = 'boxe'; // pre-rename spelling
   if (typeof old.reps === 'number') out.sets = Math.min(10, Math.max(1, Math.ceil(old.reps / 2)));
   return out as Partial<Settings>;
 }
@@ -81,6 +82,11 @@ export const useApp = create<AppState>()(
     {
       name: 'stretchTimer.settings.v7',
       partialize: (s) => Object.fromEntries(SETTINGS_KEYS.map((k) => [k, s[k]])),
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Record<string, unknown>;
+        if (p.mode === 'box') p.mode = 'boxe'; // early v7 payloads used the typo
+        return { ...current, ...(p as Partial<Settings>) };
+      },
     },
   ),
 );

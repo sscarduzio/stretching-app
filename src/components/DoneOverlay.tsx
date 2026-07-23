@@ -9,7 +9,7 @@ export default function DoneOverlay() {
   return (
     <div className={`overlay${finished ? ' is-active' : ''}`}>
       <div className="overlay-card glass">
-        <div className="done-emoji">{mode.key === 'box' ? '🥊' : '🎉'}</div>
+        <div className="done-emoji">{mode.key === 'boxe' ? '🥊' : '🎉'}</div>
         <h2>All done!</h2>
         <p>{finished ? mode.doneText(useApp.getState(), totalTime) : ''}</p>
         <button className="primary" onClick={stop}><span>Back to setup</span></button>
