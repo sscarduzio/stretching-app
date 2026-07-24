@@ -180,7 +180,7 @@ export const MODES: Record<ModeKey, Mode> = {
     buildPlan: buildBoxPlan,
     primaryCount: (cfg) => cfg.boxRounds,
     preload(cfg) {
-      const n = new Set(['box_work', 'box_rest', 'box_done', 'box_clapper',
+      const n = new Set(['box_work', 'box_rest', 'box_done',
         'box_count_1', 'box_count_2', 'box_count_3']);
       for (let r = 1; r <= cfg.boxRounds; r++) n.add('box_round_' + r);
       if (cfg.boxCombos > 0) COMBOS.forEach((c) => n.add(c));

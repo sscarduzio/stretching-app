@@ -13,8 +13,16 @@ export default defineConfig({
       registerType: 'autoUpdate',
       manifest: false, // public/manifest.json is hand-maintained
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,jpg}', 'audio/voice/*.mp3'],
+        // voice is now 5 locales (~16 MB total) — runtime-cached per locale on
+        // first use (preload() warms the session's atoms at Start) instead of
+        // precaching every language onto every device
+        globPatterns: ['**/*.{js,css,html,svg,jpg}'],
         runtimeCaching: [
+          {
+            urlPattern: /\/audio\/voice\/.*\.mp3$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'voice', expiration: { maxEntries: 500 } },
+          },
           {
             urlPattern: /\/audio\/[^/]+\.mp3$/,
             handler: 'CacheFirst',

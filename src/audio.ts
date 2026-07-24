@@ -1,9 +1,11 @@
 // Web Audio: beeps, pre-generated voice atoms on a single bus, music + pad fallback.
 // Straight port of the vanilla engine; guards (voice/beeps/vibrate flags) live here
 // so callers never have to remember them.
+import { locale } from './i18n';
 import { useApp } from './store';
 
-const VOICE_DIR = 'audio/voice/';
+// the coach speaks the UI language — one atom set per locale
+const VOICE_DIR = `audio/voice/${locale}/`;
 
 const cfg = () => useApp.getState();
 
@@ -32,7 +34,7 @@ export function beep(freq = 880, dur = 0.14): void {
 // if the atom hasn't loaded (e.g. first cold run).
 export function clapper(): void {
   if (!cfg().beeps) return;
-  loadAtom('box_clapper')
+  loadAtom('box_clapper', 'audio/') // language-neutral, lives outside the locale dirs
     .then((ab) => {
       const ctx = ensureAudio();
       const src = ctx.createBufferSource();
@@ -75,13 +77,13 @@ export function cutVoice(): void {
   activeSources.length = 0;
 }
 
-export function loadAtom(name: string): Promise<AudioBuffer> {
+export function loadAtom(name: string, dir: string = VOICE_DIR): Promise<AudioBuffer> {
   const cached = atomCache.get(name);
   if (cached) return Promise.resolve(cached);
   const loading = atomLoading.get(name);
   if (loading) return loading;
   const p = (async () => {
-    const res = await fetch(VOICE_DIR + name + '.mp3');
+    const res = await fetch(dir + name + '.mp3');
     if (!res.ok) throw new Error('no audio: ' + name);
     const ab = await ensureAudio().decodeAudioData(await res.arrayBuffer());
     atomCache.set(name, ab);

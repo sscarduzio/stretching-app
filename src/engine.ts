@@ -1,7 +1,7 @@
 // Timer engine — drift-free performance.now() loop, kept outside React.
 // Mutable per-frame state lives in module locals; anything the UI renders is
 // pushed into the zustand store (ring progress at 60fps, dashboard throttled).
-import { beep, clapper, cutVoice, ensureAudio, haptic, pauseMusic, playAtom, playSequence, restartMusic, sequenceDuration, startMusic, stopMusic } from './audio';
+import { beep, clapper, cutVoice, ensureAudio, haptic, loadAtom, pauseMusic, playAtom, playSequence, restartMusic, sequenceDuration, startMusic, stopMusic } from './audio';
 import { COMBOS, MODES, PREPARE_FIELD } from './modes';
 import { useApp, type Phase } from './store';
 
@@ -177,6 +177,7 @@ export function start() {
   lastDash = 0;
   ensureAudio();
   m.preload(s);
+  if (m.key === 'boxe') void loadAtom('box_clapper', 'audio/').catch(() => {});
   if (!m.musicFollowsRounds) startMusic(); // round-scoped music starts per phase
   void requestWakeLock();
   startPhase();

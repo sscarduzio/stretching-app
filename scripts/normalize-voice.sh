@@ -24,7 +24,7 @@
 # ============================================================
 set -euo pipefail
 
-VOICE_DIR="audio/voice"
+VOICE_DIR="${VOICE_DIR:-public/audio/voice/en}"
 TARGET_I="${LOUDNESS:--16}"      # target integrated loudness (LUFS)
 TARGET_TP="-1.5"                 # target true peak (dBTP)
 TARGET_LRA="11"                  # max loudness range

@@ -46,10 +46,12 @@ React + TypeScript + Vite, with [zustand](https://github.com/pmndrs/zustand) for
 ## Regenerating the voice
 
 ```bash
-OPENAI_API_KEY=sk-... bash scripts/generate-voice.sh all      # both themes
-OPENAI_API_KEY=sk-... bash scripts/generate-voice.sh stretch   # stretch only
-OPENAI_API_KEY=sk-... bash scripts/generate-voice.sh box       # box only
+OPENAI_API_KEY=sk-... python3 scripts/generate_voice.py                 # all locales, both themes
+OPENAI_API_KEY=sk-... python3 scripts/generate_voice.py --locales it,es # a subset
+OPENAI_API_KEY=sk-... python3 scripts/generate_voice.py --force         # regenerate existing
 ```
+
+Atoms are generated per UI language into `audio/voice/<locale>/` (the coach speaks the selected language), silence-trimmed, and loudness-normalized to −16 LUFS; the boxe voice additionally gets a deterministic tempo boost so the coach stays snappy.
 
 The script is idempotent (skips existing files). Per-theme voice/speed/direction can be tweaked with env vars (`VOICE`, `BOX_VOICE`, `SPEED`, `BOX_SPEED`, etc.). The key is used only by the script at build time — never in the app, never in the repo, never requested at runtime.
 
