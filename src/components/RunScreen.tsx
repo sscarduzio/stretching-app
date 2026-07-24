@@ -142,33 +142,6 @@ function RepGrid({ done, current }: { done: number; current: number }) {
   );
 }
 
-function DistBar() {
-  const plan = useApp((s) => s.plan);
-  const mode = useApp((s) => MODES[s.mode]);
-  let prim = 0, rec = 0, rest = 0;
-  for (const p of plan) {
-    if (p.type === mode.primaryType) prim += p.duration;
-    else if (p.type === 'recover') rec += p.duration;
-    else if (p.type === 'rest' || p.type === 'prepare') rest += p.duration;
-  }
-  const total = prim + rec + rest || 1;
-  return (
-    <section className="glass dash-card dist-card">
-      <div className="card-head"><span className="card-title">{t.run.timeSplit}</span></div>
-      <div className="dist-bar">
-        <span className="dist-seg hold" style={{ width: `${(prim / total) * 100}%` }} />
-        <span className="dist-seg recover" style={{ width: `${(rec / total) * 100}%` }} />
-        <span className="dist-seg rest" style={{ width: `${(rest / total) * 100}%` }} />
-      </div>
-      <div className="dist-legend">
-        <span className="lg hold"><i />{mode.distPrimaryLabel} <b>{fmtDur(prim)}</b></span>
-        {/* id kept: CSS hides this legend in boxe mode */}
-        <span className="lg recover" id="lg-recover-wrap"><i />{t.run.legendRecover} <b>{fmtDur(rec)}</b></span>
-        <span className="lg rest"><i />{t.run.legendRest} <b>{fmtDur(rest)}</b></span>
-      </div>
-    </section>
-  );
-}
 
 // spacebar toggles pause/resume when not on a control (desktop usability)
 function useSpacePause() {
@@ -217,25 +190,9 @@ export default function RunScreen({ active }: { active: boolean }) {
       <PhaseAnnouncer />
       <NextCard />
 
-      <section className="dash-row">
-        <div className="glass dash-card overall-card">
-          <span className="card-title">{t.run.session}</span>
-          <div className="overall-body">
-            <svg viewBox="0 0 120 120" className="mini-donut" aria-hidden="true">
-              <circle className="md-bg" cx="60" cy="60" r="52" pathLength={100} />
-              <circle
-                className="md-fg" cx="60" cy="60" r="52" pathLength={100}
-                style={{ strokeDashoffset: (100 * (1 - pct)).toFixed(2) }}
-              />
-            </svg>
-            <div className="overall-center">
-              <span className="overall-pct">{Math.round(pct * 100)}%</span>
-              <span className="overall-sub">{t.run.complete}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="glass dash-card stat-stack">
+      {/* one cohesive dashboard panel: time, progress dots, audio */}
+      <section className="glass dash-card dash-panel">
+        <div className="panel-stats">
           <div className="stat">
             <span className="stat-val">{fmtDur(s.elapsed)}</span>
             <span className="stat-label">{t.run.elapsed}</span>
@@ -244,22 +201,23 @@ export default function RunScreen({ active }: { active: boolean }) {
             <span className="stat-val">{fmtDur(s.totalTime - s.elapsed)}</span>
             <span className="stat-label">{t.run.remaining}</span>
           </div>
-          {/* the primary count lives in one place: the progress-dots card below */}
+          <div className="stat">
+            <span className="stat-val">{Math.round(pct * 100)}%</span>
+            <span className="stat-label">{t.run.complete}</span>
+          </div>
         </div>
-      </section>
 
-      <section className="glass dash-card reps-card">
+        <div className="panel-sep" />
+
         <div className="card-head">
           <span className="card-title">{mode.repTitle}</span>
           <span className="card-meta">{doneCount} / {s.primaryTotal}</span>
         </div>
         <RepGrid done={doneCount} current={current} />
-      </section>
 
-      <DistBar />
+        <div className="panel-sep" />
 
-      {/* the audio layers stay adjustable mid-workout — no trip to setup */}
-      <div className="run-vol glass run-audio">
+        {/* audio layers stay adjustable mid-workout — no trip to setup */}
         <div className="sound-chips">
           {SOUND_CHIPS.map((c) => <SoundChip key={c.k} {...c} />)}
         </div>
@@ -269,7 +227,7 @@ export default function RunScreen({ active }: { active: boolean }) {
             <VolumeSlider id="run-vol-slider" />
           </div>
         )}
-      </div>
+      </section>
 
       <div className="controls">
         <button className="ctrl" onClick={() => (s.paused ? resume() : pause())}>

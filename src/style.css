@@ -373,16 +373,6 @@ body[data-phase="rest"] .topbar-live .dot { background: var(--rest); box-shadow:
 .card-meta { font-size: 13px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
 
 /* overall donut */
-.overall-card { align-items: center; }
-.overall-body { position: relative; width: 116px; height: 116px; display: grid; place-items: center; }
-.mini-donut { width: 116px; height: 116px; transform: rotate(-90deg); }
-.mini-donut circle { fill: none; stroke-width: 11; stroke-linecap: round; }
-.md-bg { stroke: rgba(255,255,255,.07); }
-.mini-donut { overflow: visible; }
-.md-fg { stroke: url(#ring-grad); stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset .3s linear; filter: drop-shadow(0 0 6px rgba(109,139,255,.5)); }
-.overall-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
-.overall-pct { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
-.overall-sub { font-size: 10px; color: var(--muted-2); text-transform: uppercase; letter-spacing: .12em; }
 
 /* stat stack */
 .stat-stack { justify-content: space-around; }
@@ -410,19 +400,6 @@ body[data-phase="recover"] .rep-dot.done { box-shadow: 0 0 6px rgba(52,211,153,.
 @keyframes repcurrent { 0%,100% { transform: scale(1); } 50% { transform: scale(1.28); } }
 
 /* ---------- Time split bar ---------- */
-.dist-bar { display: flex; height: 12px; border-radius: 8px; overflow: hidden; background: rgba(255,255,255,.05); gap: 2px; }
-.dist-seg { height: 100%; transition: width .4s var(--ease); }
-.dist-seg.hold { background: linear-gradient(90deg, #ff7a7a, #ff3d6e); }
-.dist-seg.recover { background: linear-gradient(90deg, #34d399, #2bb673); }
-.dist-seg.rest { background: linear-gradient(90deg, #8b7bff, #6d8bff); }
-.dist-seg[style*="width: 0%"] { display: none; }
-.dist-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 2px; }
-.lg { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
-.lg i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
-.lg.hold i { background: #ff5e5e; }
-.lg.recover i { background: #34d399; }
-.lg.rest i { background: #8b7bff; }
-.lg b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; margin-left: 2px; }
 
 /* tighter controls on run screen */
 #run-screen .controls { max-width: 460px; }
@@ -437,9 +414,7 @@ body[data-mode="boxe"] #grad-start { stop-color: #ffb84d; }
 body[data-mode="boxe"] #grad-end   { stop-color: #ff4d3d; }
 
 /* box mode hides stretch-only UI (chip + recover legend) */
-body[data-mode="boxe"] #stretch-label { display: none; }
-body[data-mode="boxe"] #lg-recover-wrap { display: none; }
-
+body[data-mode="boxe"] 
 .mode-switch {
   position: fixed; top: calc(var(--safe-top) + 10px); right: 14px;
   z-index: 30; display: flex; padding: 3px; border-radius: 13px;
@@ -535,11 +510,7 @@ body[data-mode="boxe"][data-phase="rest"] .ring-fg { filter: drop-shadow(0 0 16p
 body[data-mode="boxe"][data-phase="rest"] .ring-glow { animation: breathe 3s ease-in-out infinite; }
 
 /* boxing time-split bar (work = orange/red, rest = blue) */
-body[data-mode="boxe"] .dist-seg.hold { background: linear-gradient(90deg, #ff8a3d, #ff4d3d); }
-body[data-mode="boxe"] .dist-seg.rest { background: linear-gradient(90deg, #5b8aff, #6d8bff); }
-body[data-mode="boxe"] .lg.hold i { background: #ff6b3d; }
-body[data-mode="boxe"] .lg.rest i { background: #5b8aff; }
-
+body[data-mode="boxe"] body[data-mode="boxe"] body[data-mode="boxe"] body[data-mode="boxe"] 
 /* boxing rep dots (round dots glow orange) */
 body[data-mode="boxe"] .rep-dot.done {
   background: linear-gradient(135deg, var(--accent-2), var(--accent));
@@ -640,10 +611,9 @@ body[data-phase="prepare"] .mode-switch { display: none; }
     grid-template-areas:
       "top  top"
       "head head"
-      "hero dash"
-      "hero reps"
-      "next dist"
-      "ctrl vol";
+      "hero panel"
+      "next panel"
+      "ctrl panel";
     column-gap: 30px; row-gap: 16px;
     align-content: start; justify-items: center;
     padding-left: max(22px, calc(50vw - 490px));
@@ -653,10 +623,7 @@ body[data-phase="prepare"] .mode-switch { display: none; }
   #run-screen .run-header { grid-area: head; max-width: none; }
   #run-screen .ring-wrap { grid-area: hero; width: min(40vw, 380px); align-self: center; }
   #run-screen .next-card { grid-area: next; align-self: start; }
-  #run-screen .dash-row { grid-area: dash; }
-  #run-screen .reps-card { grid-area: reps; align-self: start; }
-  #run-screen .dist-card { grid-area: dist; align-self: start; }
-  #run-screen .run-vol { grid-area: vol; align-self: start; }
+  #run-screen .dash-panel { grid-area: panel; align-self: start; }
   #run-screen .controls { grid-area: ctrl; align-self: end; }
   .time { font-size: clamp(70px, 9vw, 112px); }
 }
@@ -717,12 +684,6 @@ summary:focus-visible {
 .share-btn:active { transform: scale(.95); }
 
 /* compact icon-only sound chips mid-session */
-.run-audio { flex-direction: column; gap: 8px; }
-.run-audio .sound-chips { width: 100%; }
-.run-audio .schip { padding: 7px 4px; font-size: 11px; }
-.run-audio .schip .ico { font-size: 16px; }
-.run-audio .vol-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 0; }
-.run-audio .vol-row input[type="range"] { flex: 1; }
 
 /* square focus toggle at the end of the controls row */
 .ctrl-icon { flex: 0 0 58px; font-size: 21px; }
@@ -731,10 +692,7 @@ summary:focus-visible {
 /* focus mode: big-clock — the ring and the controls, nothing else */
 body[data-focus="on"] #run-screen .run-header,
 body[data-focus="on"] #run-screen .next-card,
-body[data-focus="on"] #run-screen .dash-row,
-body[data-focus="on"] #run-screen .reps-card,
-body[data-focus="on"] #run-screen .dist-card,
-body[data-focus="on"] #run-screen .run-audio { display: none; }
+body[data-focus="on"] #run-screen .dash-panel { display: none; }
 body[data-focus="on"] #run-screen.is-active {
   display: flex; flex-direction: column; align-items: center; justify-content: space-between;
 }
@@ -759,10 +717,25 @@ body[data-mode="plank"] .primary {
   background: linear-gradient(135deg, #14b88a, #2dd4a7);
   box-shadow: 0 10px 34px rgba(45,212,167,.35);
 }
-body[data-mode="plank"] .dist-seg.hold { background: linear-gradient(90deg, #2dd4a7, #14b88a); }
-body[data-mode="plank"] .lg.hold i { background: #2dd4a7; }
-body[data-mode="plank"] .rep-dot.done {
+body[data-mode="plank"] body[data-mode="plank"] body[data-mode="plank"] .rep-dot.done {
   background: linear-gradient(135deg, #14b88a, #2dd4a7);
   box-shadow: 0 0 6px rgba(45,212,167,.45);
 }
 body[data-mode="plank"] .overlay-card h2 { color: #2dd4a7; }
+
+
+/* ============================================================
+   COHESIVE RUN DASHBOARD — one panel: stats · dots · audio
+   ============================================================ */
+.dash-panel { width: 100%; max-width: 460px; display: flex; flex-direction: column; gap: 12px; }
+.panel-stats { display: flex; justify-content: space-between; }
+.panel-stats .stat { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.panel-sep { border-top: 1px solid var(--stroke-soft); }
+.dash-panel .vol-row { display: flex; align-items: center; gap: 12px; padding: 0; }
+.dash-panel .vol-row input[type="range"] { flex: 1; }
+
+/* ring gradient follows the mode (SVG stops are hardcoded red otherwise) */
+body[data-mode="plank"] .ring linearGradient stop:first-child { stop-color: #2dd4a7; }
+body[data-mode="plank"] .ring linearGradient stop:last-child { stop-color: #14b88a; }
+body[data-mode="boxe"] .ring linearGradient stop:first-child { stop-color: #ff8a3d; }
+body[data-mode="boxe"] .ring linearGradient stop:last-child { stop-color: #ff4d3d; }
