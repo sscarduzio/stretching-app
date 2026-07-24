@@ -21,7 +21,9 @@ export default defineConfig({
           {
             urlPattern: /\/audio\/voice\/.*\.mp3$/,
             handler: 'CacheFirst',
-            options: { cacheName: 'voice', expiration: { maxEntries: 500 } },
+            // bump the suffix whenever atoms are regenerated: CacheFirst never
+            // revalidates, so a rename is how cached devices pick up new audio
+            options: { cacheName: 'voice-v2', expiration: { maxEntries: 500 } },
           },
           {
             urlPattern: /\/audio\/[^/]+\.mp3$/,
