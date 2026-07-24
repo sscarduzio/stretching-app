@@ -80,9 +80,9 @@ Deploys to GitHub Pages automatically on push to `main` (`.github/workflows/depl
 
 One row of trainer-authored **presets** per mode (Stretch: Quick / Daily / Deep · Boxe: Beginner / Classic / HIIT), then only the knobs that matter:
 
-**Stretch:** Hold (per side) · Stretches (exercises) · Sets (1 set = left + right). Defaults: 30 s × 1 stretch × 5 sets.
-**Boxe:** Rounds · Round length · Rest. Defaults: 6 × 60 s / 20 s.
-**Plank:** Hold · Planks (exercises — side planks are separate exercises, no left/right alternation) · Sets. Defaults: 45 s × 3 planks × 3 sets. Presets: Starter / Classic / Iron core.
+**Stretch:** Hold (per side) · Stretches (exercises) · Sets (1 set = left + right). Defaults: 30 s × 1 stretch × 3 sets.
+**Boxe:** Rounds · Round length · Rest. Defaults: 6 × 60 s / 30 s.
+**Plank:** Hold · Planks (exercises — side planks are separate exercises, no left/right alternation) · Sets. Defaults: 30 s holds × 3 planks × 3 sets, 30 s recovery. Presets: Starter / Classic / Iron core.
 
 **Advanced** (collapsed): Side switch time · Rest between stretches (fires only when moving to the next exercise) · Combo pace · **Get ready** — a 10 s amber lead-in before the first phase so you can put the phone down and get into position.
 

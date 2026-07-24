@@ -29,9 +29,15 @@ export interface Settings {
 
 export const DEFAULTS: Settings = {
   mode: 'stretch',
-  hold: 30, recover: 5, rest: 15, stretches: 1, sets: 5,
-  boxRounds: 6, boxWork: 60, boxRest: 20, boxCombos: 15,
-  plankHold: 45, plankExercises: 3, plankSets: 3, plankRecover: 10, plankRest: 20,
+  // Defaults are physiologically conservative — a first session must be
+  // completable with good form by an untrained adult:
+  //  · stretch: 3 sets/side x 30s = 90s per muscle (guideline total 60-90s)
+  //  · boxe: 2:1 work:rest, never harder than the Beginner preset
+  //  · plank: 30s holds with 30s recovery — short isometric recovery breaks
+  //    form (lumbar sag) and is an injury risk, not a difficulty setting
+  hold: 30, recover: 5, rest: 15, stretches: 1, sets: 3,
+  boxRounds: 6, boxWork: 60, boxRest: 30, boxCombos: 15,
+  plankHold: 30, plankExercises: 3, plankSets: 3, plankRecover: 30, plankRest: 30,
   prepare: 10,
   focus: false,
   voice: true, beeps: true, vibrate: true, music: false, volume: 0.35,
