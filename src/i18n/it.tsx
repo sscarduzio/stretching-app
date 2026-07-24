@@ -7,6 +7,7 @@ export const it: Messages = {
   modes: {
     stretch: { title: 'Stretch', subtitle: 'Tieni · recupera · alterna i lati' },
     boxe: { title: 'Boxe', subtitle: 'Boxe a vuoto · combo · round' },
+    plank: { title: 'Plank', subtitle: 'Core · esercizi · serie' },
   },
 
   fields: {
@@ -19,12 +20,18 @@ export const it: Messages = {
     boxWork: { label: 'Durata round', sub: 'secondi' },
     boxRest: { label: 'Riposo', sub: 'tra i round · 0 = off' },
     boxCombos: { label: 'Ritmo combo', sub: 'secondi · 0 = off' },
+    plankHold: { label: 'Tenuta', sub: 'secondi' },
+    plankExercises: { label: 'Plank', sub: 'esercizi' },
+    plankSets: { label: 'Serie', sub: 'per plank' },
+    plankRecover: { label: 'Tra le serie', sub: 'secondi' },
+    plankRest: { label: 'Tra i plank', sub: '0 = off' },
     prepare: { label: 'Preparazione', sub: 'prima di iniziare · 0 = off' },
   },
 
   presets: {
     quick: 'Veloce', daily: 'Quotidiano', deep: 'Profondo',
     beginner: 'Principiante', classic: 'Classico', hiit: 'HIIT',
+    starter: 'Base', core: 'Classico', iron: 'Core d’acciaio',
   },
 
   config: {
@@ -51,6 +58,11 @@ export const it: Messages = {
         {combos > 0 ? ` · combo ogni ${combos}s` : ''} · circa <b>{total}</b>
       </>
     ),
+    plank: (ex, sets, hold, total) => (
+      <>
+        <b>{ex}</b> plank × <b>{sets}</b> serie · <b>{hold}s</b> di tenuta · circa <b>{total}</b>
+      </>
+    ),
   },
 
   run: {
@@ -64,12 +76,14 @@ export const it: Messages = {
     roundChip: (n, total) => `Round ${n} / ${total}`,
     hold: 'TIENI', switch: 'CAMBIO', rest: 'RIPOSO', work: 'LAVORO', boxe: 'BOXE',
     left: 'SINISTRA', right: 'DESTRA', ready: 'PRONTI', getReady: 'PREPARATI',
+    plank: 'PLANK', plankChip: (n, total) => `Plank ${n} / ${total}`,
     holdsTitle: 'Tenute', roundsTitle: 'Round',
     legendHold: 'Tenuta', legendWork: 'Lavoro', legendRecover: 'Recupero', legendRest: 'Riposo',
     next: {
       holdSide: (side) => `lato ${side === 'left' ? 'sinistro' : 'destro'} · allungamento`,
       nextStretch: 'Prossimo esercizio', switchSides: 'Cambia lato', rest: 'Riposo',
       round: (n) => `Round ${n} · boxe`,
+      nextPlank: 'Prossimo plank', plank: (n) => `Plank ${n}`,
       getReady: 'Preparati', finish: 'Fine',
     },
   },
@@ -77,7 +91,7 @@ export const it: Messages = {
   about: {
     button: 'Informazioni sull’app',
     title: 'Informazioni',
-    what: 'Un timer a intervalli gratuito con due anime: stretching rilassato e boxe a vuoto. Con una vera voce da coach, preset pronti all’uso e una dashboard live che conta al posto tuo.',
+    what: 'Un timer a intervalli gratuito con tre anime: stretching rilassato, boxe a vuoto e plank per il core. Con una vera voce da coach, preset pronti all’uso e una dashboard live che conta al posto tuo.',
     who: 'È per chiunque faccia stretching o boxe a vuoto, a casa o in palestra. E anche per i coach: condividi un intero allenamento semplicemente inviando l’URL.',
     why: 'Niente pubblicità, niente account, niente abbonamenti. Funziona completamente offline dopo il primo caricamento, si installa sulla schermata home e il timer parte solo quando il coach finisce di parlare — come farebbe un vero allenatore.',
     madeBy: 'Simone Scarduzio su X',
@@ -91,5 +105,6 @@ export const it: Messages = {
       `${holds} tenute in ${stretches} esercizi${stretches === 1 ? 'o' : ''} · circa ${mins} min`,
     boxe: (rounds, work, mins) =>
       `${rounds} round · ${work} di lavoro · circa ${mins} min`,
+    plank: (holds, ex, mins) => `${holds} tenute su ${ex} plank · circa ${mins} min`,
   },
 };

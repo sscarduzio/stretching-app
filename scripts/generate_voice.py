@@ -118,6 +118,10 @@ def phrases(loc):
             'fr': f'Repos. Étirement {n(loc, i)}.'}[loc])
     for i in range(1, 4):
         p[f'count_{i}'] = ('stretch', n(loc, i))
+    p['plank_hold'] = ('stretch', {
+        'en': 'Plank. Hold strong.', 'it': 'Plank. Tieni la posizione.',
+        'es': 'Plancha. Aguanta.', 'pt': 'Prancha. Segura firme.',
+        'fr': 'Planche. Tiens bon.'}[loc])
     p['done'] = ('stretch', {
         'en': 'All done. Great job.', 'it': 'Finito. Ottimo lavoro.',
         'es': 'Terminado. ¡Buen trabajo!', 'pt': 'Pronto. Ótimo trabalho.',

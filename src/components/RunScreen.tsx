@@ -114,24 +114,22 @@ function NextCard() {
 }
 
 function RepGrid({ done, current }: { done: number; current: number }) {
-  const stretches = useApp((s) => s.stretches);
-  const holdsPerStretch = useApp((s) => s.sets * 2);
   const primaryTotal = useApp((s) => s.primaryTotal);
-  const mode = useApp((s) => MODES[s.mode]);
+  const settings = useSettings(); // grid() returns a fresh object — don't select it
+  const layout = MODES[settings.mode].grid(settings);
 
   const dot = (i: number) => (
     <span key={i} className={`rep-dot${i < done ? ' done' : ''}${i === current ? ' current' : ''}`} />
   );
 
-  const grouped = mode.showStretchChip && stretches > 1;
   return (
     <div className="rep-grid">
-      {grouped
-        ? Array.from({ length: stretches }, (_, s) => (
-            <div key={s} className="rep-group">
-              <span className="rep-group-label">S{s + 1}</span>
+      {layout
+        ? Array.from({ length: layout.groups }, (_, g) => (
+            <div key={g} className="rep-group">
+              <span className="rep-group-label">{g + 1}</span>
               <div className="rep-dots">
-                {Array.from({ length: holdsPerStretch }, (_, r) => dot(s * holdsPerStretch + r))}
+                {Array.from({ length: layout.perGroup }, (_, r) => dot(g * layout.perGroup + r))}
               </div>
             </div>
           ))

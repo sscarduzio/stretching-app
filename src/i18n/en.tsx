@@ -11,6 +11,7 @@ export const en = {
   modes: {
     stretch: { title: 'Stretch', subtitle: 'Hold · recover · alternate sides' },
     boxe: { title: 'Boxe', subtitle: 'Shadow boxe · combos · rounds' },
+    plank: { title: 'Plank', subtitle: 'Core holds · exercises · sets' },
   },
 
   // keyed by the Settings field name
@@ -24,12 +25,18 @@ export const en = {
     boxWork: { label: 'Round length', sub: 'seconds' },
     boxRest: { label: 'Rest', sub: 'between rounds · 0 = off' },
     boxCombos: { label: 'Combo pace', sub: 'seconds apart · 0 = off' },
+    plankHold: { label: 'Hold', sub: 'seconds' },
+    plankExercises: { label: 'Planks', sub: 'exercises' },
+    plankSets: { label: 'Sets', sub: 'per plank' },
+    plankRecover: { label: 'Between sets', sub: 'seconds' },
+    plankRest: { label: 'Between planks', sub: '0 = off' },
     prepare: { label: 'Get ready', sub: 'lead-in · 0 = off' },
   },
 
   presets: {
     quick: 'Quick', daily: 'Daily', deep: 'Deep',
     beginner: 'Beginner', classic: 'Classic', hiit: 'HIIT',
+    starter: 'Starter', core: 'Classic', iron: 'Iron core',
   },
 
   config: {
@@ -56,6 +63,12 @@ export const en = {
         {combos > 0 ? ` · combos every ${combos}s` : ''} · about <b>{total}</b>
       </>
     ),
+    plank: (ex: number, sets: number, hold: number, total: string): ReactNode => (
+      <>
+        <b>{ex}</b> plank{ex > 1 ? 's' : ''} × <b>{sets}</b> set{sets > 1 ? 's' : ''} ·{' '}
+        <b>{hold}s</b> holds · about <b>{total}</b>
+      </>
+    ),
   },
 
   run: {
@@ -70,12 +83,14 @@ export const en = {
     // ring labels
     hold: 'HOLD', switch: 'SWITCH', rest: 'REST', work: 'WORK', boxe: 'BOXE',
     left: 'LEFT', right: 'RIGHT', ready: 'READY', getReady: 'GET READY',
+    plank: 'PLANK', plankChip: (n: number, total: number) => `Plank ${n} / ${total}`,
     holdsTitle: 'Holds', roundsTitle: 'Rounds',
     legendHold: 'Hold', legendWork: 'Work', legendRecover: 'Recover', legendRest: 'Rest',
     next: {
       holdSide: (side: 'left' | 'right') => `${side} side · stretch`,
       nextStretch: 'Next stretch', switchSides: 'Switch sides', rest: 'Rest',
       round: (n: number) => `Round ${n} · box`,
+      nextPlank: 'Next plank', plank: (n: number) => `Plank ${n}`,
       getReady: 'Get ready', finish: 'Finish',
     },
   },
@@ -83,7 +98,7 @@ export const en = {
   about: {
     button: 'About this app',
     title: 'About',
-    what: 'A free interval timer with two souls: calm stretching and shadow boxe. It comes with a real coach voice, handy presets, and a live dashboard that keeps count so you don’t have to.',
+    what: 'A free interval timer with three souls: calm stretching, shadow boxe, and core planks. It comes with a real coach voice, handy presets, and a live dashboard that keeps count so you don’t have to.',
     who: 'It’s for anyone who stretches or shadow-boxes at home or at the gym. Coaches, you’re covered too: share a whole workout just by sending the URL.',
     why: 'No ads, no accounts, no subscription. It works fully offline once loaded, installs right on your home screen, and the timer only starts counting when the coach finishes talking — like a real trainer would.',
     madeBy: 'Simone Scarduzio on X',
@@ -97,6 +112,8 @@ export const en = {
       `${holds} holds across ${stretches} stretch${stretches > 1 ? 'es' : ''} · about ${mins} min`,
     boxe: (rounds: number, work: string, mins: number) =>
       `${rounds} rounds · ${work} work · about ${mins} min`,
+    plank: (holds: number, ex: number, mins: number) =>
+      `${holds} holds across ${ex} plank${ex > 1 ? 's' : ''} · about ${mins} min`,
   },
 };
 

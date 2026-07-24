@@ -7,6 +7,7 @@ export const fr: Messages = {
   modes: {
     stretch: { title: 'Stretch', subtitle: 'Tiens · récupère · alterne les côtés' },
     boxe: { title: 'Boxe', subtitle: 'Shadow boxing · combos · rounds' },
+    plank: { title: 'Gainage', subtitle: 'Core · exercices · séries' },
   },
 
   fields: {
@@ -19,12 +20,18 @@ export const fr: Messages = {
     boxWork: { label: 'Durée du round', sub: 'secondes' },
     boxRest: { label: 'Repos', sub: 'entre les rounds · 0 = off' },
     boxCombos: { label: 'Rythme des combos', sub: 'secondes · 0 = off' },
+    plankHold: { label: 'Maintien', sub: 'secondes' },
+    plankExercises: { label: 'Planches', sub: 'exercices' },
+    plankSets: { label: 'Séries', sub: 'par planche' },
+    plankRecover: { label: 'Entre les séries', sub: 'secondes' },
+    plankRest: { label: 'Entre les planches', sub: '0 = off' },
     prepare: { label: 'Préparation', sub: 'avant de commencer · 0 = off' },
   },
 
   presets: {
     quick: 'Rapide', daily: 'Quotidien', deep: 'Profond',
     beginner: 'Débutant', classic: 'Classique', hiit: 'HIIT',
+    starter: 'Débutant', core: 'Classique', iron: 'Core d’acier',
   },
 
   config: {
@@ -51,6 +58,12 @@ export const fr: Messages = {
         {combos > 0 ? ` · combos toutes les ${combos}s` : ''} · environ <b>{total}</b>
       </>
     ),
+    plank: (ex, sets, hold, total) => (
+      <>
+        <b>{ex}</b> planche{ex > 1 ? 's' : ''} × <b>{sets}</b> série{sets > 1 ? 's' : ''} ·{' '}
+        <b>{hold}s</b> de maintien · environ <b>{total}</b>
+      </>
+    ),
   },
 
   run: {
@@ -64,12 +77,14 @@ export const fr: Messages = {
     roundChip: (n, total) => `Round ${n} / ${total}`,
     hold: 'TIENS', switch: 'CHANGE', rest: 'REPOS', work: 'TRAVAIL', boxe: 'BOXE',
     left: 'GAUCHE', right: 'DROITE', ready: 'PRÊT', getReady: 'PRÉPARE-TOI',
+    plank: 'PLANCHE', plankChip: (n, total) => `Planche ${n} / ${total}`,
     holdsTitle: 'Répétitions', roundsTitle: 'Rounds',
     legendHold: 'Maintien', legendWork: 'Travail', legendRecover: 'Récupération', legendRest: 'Repos',
     next: {
       holdSide: (side) => `côté ${side === 'left' ? 'gauche' : 'droit'} · étirement`,
       nextStretch: 'Étirement suivant', switchSides: 'Change de côté', rest: 'Repos',
       round: (n) => `Round ${n} · boxe`,
+      nextPlank: 'Planche suivante', plank: (n) => `Planche ${n}`,
       getReady: 'Prépare-toi', finish: 'Fin',
     },
   },
@@ -80,12 +95,13 @@ export const fr: Messages = {
       `${holds} maintiens sur ${stretches} étirement${stretches > 1 ? 's' : ''} · environ ${mins} min`,
     boxe: (rounds, work, mins) =>
       `${rounds} rounds · ${work} de travail · environ ${mins} min`,
+    plank: (holds, ex, mins) => `${holds} maintiens sur ${ex} planche${ex > 1 ? 's' : ''} · environ ${mins} min`,
   },
 
   about: {
     button: 'À propos de cette app',
     title: 'À propos',
-    what: "Un minuteur d'intervalles gratuit à deux visages : étirements calmes et shadow boxing. Avec une vraie voix de coach, des programmes prêts à l'emploi et un tableau de bord qui compte à ta place.",
+    what: "Un minuteur d'intervalles gratuit à trois visages : étirements calmes, shadow boxing et gainage. Avec une vraie voix de coach, des programmes prêts à l'emploi et un tableau de bord qui compte à ta place.",
     who: "Pour tous ceux qui s'étirent ou boxent dans le vide, à la maison ou à la salle. Les coachs aussi : partagez une séance entière en envoyant simplement l'URL.",
     why: "Pas de pub, pas de compte, pas d'abonnement. Fonctionne hors ligne une fois chargé, s'installe sur l'écran d'accueil, et le chrono ne démarre que quand le coach a fini de parler — comme un vrai.",
     madeBy: 'Simone Scarduzio sur X',

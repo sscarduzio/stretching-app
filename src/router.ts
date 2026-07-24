@@ -18,13 +18,17 @@ function fieldsFor(mode: ModeKey): FieldDef[] {
 
 // settings key → URL param: the box* prefix is internal, permalinks read clean
 // (#/boxe?rounds=6&work=180, not boxRounds=…)
-const urlKey = (k: string) => (k.startsWith('box') ? k.slice(3).toLowerCase() : k);
+const urlKey = (k: string) =>
+  k.startsWith('box') ? k.slice(3).toLowerCase()
+  : k.startsWith('plank') ? k.slice(5).toLowerCase()
+  : k;
 
 function parseHash(): { mode: ModeKey; run: boolean; params: Partial<Settings> } {
   const [path, query] = location.hash.replace(/^#\/?/, '').split('?');
   const segs = path.split('/').filter(Boolean);
   // accept the legacy 'box' spelling in old links
-  const mode: ModeKey = segs[0] === 'boxe' || segs[0] === 'box' ? 'boxe' : 'stretch';
+  const mode: ModeKey = segs[0] === 'boxe' || segs[0] === 'box' ? 'boxe'
+    : segs[0] === 'plank' ? 'plank' : 'stretch';
   const run = segs[1] === 'run';
   const params: Record<string, number> = {};
   if (query) {

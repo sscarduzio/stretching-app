@@ -67,6 +67,7 @@ html, body {
   opacity: .38;
 }
 body[data-mode="boxe"] .aurora::before { background-image: url('./assets/bg-boxe.jpg'); }
+body[data-mode="plank"] .aurora::before { background-image: url('./assets/bg-plank.jpg'); }
 
 /* subtle film grain to soften banding */
 .grain {
@@ -741,3 +742,27 @@ body[data-focus="on"] #run-screen .ring-wrap { width: min(88vw, 60vh); }
 body[data-focus="on"] .time { font-size: clamp(80px, 22vw, 220px); }
 body[data-focus="on"] .phase-label { font-size: clamp(15px, 2.6vw, 26px); }
 body[data-focus="on"] #run-screen .controls { max-width: 560px; align-self: center; }
+
+/* ============================================================
+   PLANK MODE — emerald core theme
+   ============================================================ */
+body[data-mode="plank"] { background: #06110c; --accent: #2dd4a7; --accent-2: #14b88a; }
+body[data-mode="plank"][data-phase="hold"] { --accent: #2dd4a7; --accent-2: #14b88a; }
+body[data-mode="plank"][data-phase="hold"] .ring-fg { filter: drop-shadow(0 0 16px rgba(45,212,167,.55)); }
+body[data-mode="plank"][data-phase="hold"] .ring-glow { animation: breathe 3s ease-in-out infinite; }
+body[data-mode="plank"] .mode-btn.is-active {
+  background: linear-gradient(135deg, #14b88a, #2dd4a7);
+  color: #04120d;
+}
+body[data-mode="plank"] .brand h1 span { color: #2dd4a7; }
+body[data-mode="plank"] .primary {
+  background: linear-gradient(135deg, #14b88a, #2dd4a7);
+  box-shadow: 0 10px 34px rgba(45,212,167,.35);
+}
+body[data-mode="plank"] .dist-seg.hold { background: linear-gradient(90deg, #2dd4a7, #14b88a); }
+body[data-mode="plank"] .lg.hold i { background: #2dd4a7; }
+body[data-mode="plank"] .rep-dot.done {
+  background: linear-gradient(135deg, #14b88a, #2dd4a7);
+  box-shadow: 0 0 6px rgba(45,212,167,.45);
+}
+body[data-mode="plank"] .overlay-card h2 { color: #2dd4a7; }

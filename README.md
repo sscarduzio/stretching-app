@@ -1,6 +1,6 @@
 # 🧘🥊 Stretch & Boxe Timer
 
-A mobile-first, offline-friendly interval timer with **two modes** — calm stretching and shadow boxing — plus a drift-free countdown, a live session dashboard, and a gentle baked-in voice that needs no API key.
+A mobile-first, offline-friendly interval timer with **three modes** — calm stretching, shadow boxing, and core planks — plus a drift-free countdown, a live session dashboard, and a gentle baked-in voice that needs no API key.
 
 ![status](https://img.shields.io/badge/platform-mobile%20%2F%20web-6d8bff)
 
@@ -82,6 +82,7 @@ One row of trainer-authored **presets** per mode (Stretch: Quick / Daily / Deep 
 
 **Stretch:** Hold (per side) · Stretches (exercises) · Sets (1 set = left + right). Defaults: 30 s × 1 stretch × 5 sets.
 **Boxe:** Rounds · Round length · Rest. Defaults: 6 × 60 s / 20 s.
+**Plank:** Hold · Planks (exercises — side planks are separate exercises, no left/right alternation) · Sets. Defaults: 45 s × 3 planks × 3 sets. Presets: Starter / Classic / Iron core.
 
 **Advanced** (collapsed): Side switch time · Rest between stretches (fires only when moving to the next exercise) · Combo pace · **Get ready** — a 10 s amber lead-in before the first phase so you can put the phone down and get into position.
 

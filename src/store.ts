@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useShallow } from 'zustand/react/shallow';
 
-export type ModeKey = 'stretch' | 'boxe';
+export type ModeKey = 'stretch' | 'boxe' | 'plank';
 export type PhaseType = 'prepare' | 'hold' | 'recover' | 'rest' | 'work';
 
 export interface Phase {
@@ -20,6 +20,8 @@ export interface Settings {
   // stretch: 1 set = left + right; rest fires only between stretches (exercises)
   hold: number; recover: number; rest: number; stretches: number; sets: number;
   boxRounds: number; boxWork: number; boxRest: number; boxCombos: number;
+  // plank: exercises x sets of single holds (side planks are separate exercises)
+  plankHold: number; plankExercises: number; plankSets: number; plankRecover: number; plankRest: number;
   prepare: number; // "get ready" lead-in before the first phase, 0 = off
   focus: boolean;  // big-clock mode: hide the dashboard, giant ring
   voice: boolean; beeps: boolean; vibrate: boolean; music: boolean; volume: number;
@@ -29,6 +31,7 @@ export const DEFAULTS: Settings = {
   mode: 'stretch',
   hold: 30, recover: 5, rest: 15, stretches: 1, sets: 5,
   boxRounds: 6, boxWork: 60, boxRest: 20, boxCombos: 15,
+  plankHold: 45, plankExercises: 3, plankSets: 3, plankRecover: 10, plankRest: 20,
   prepare: 10,
   focus: false,
   voice: true, beeps: true, vibrate: true, music: false, volume: 0.35,
