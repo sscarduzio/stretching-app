@@ -83,7 +83,10 @@ def n(loc, i):  # spelled-out number, so TTS never guesses the language of a dig
 def phrases(loc):
     """atom name -> (theme, text) for one locale."""
     set_word = {'en': 'Set', 'it': 'Serie', 'es': 'Serie', 'pt': 'Série', 'fr': 'Série'}[loc]
-    round_word = {'en': 'Round', 'it': 'Round', 'es': 'Asalto', 'pt': 'Round', 'fr': 'Round'}[loc]
+    # 'Raund' is a phonetic transliteration: read as Italian text it lands on
+    # the gym pronunciation /'raund/, instead of the TTS switching to an
+    # English accent mid-sentence. Display text elsewhere still says 'Round'.
+    round_word = {'en': 'Round', 'it': 'Raund', 'es': 'Asalto', 'pt': 'Round', 'fr': 'Round'}[loc]
     p = {}
 
     # ---- stretch ----
