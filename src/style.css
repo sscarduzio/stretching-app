@@ -104,26 +104,22 @@ body[data-mode="plank"] .aurora::before { background-image: url('./assets/bg-pla
 }
 .card { width: 100%; max-width: 460px; padding: 18px 20px; }
 
-/* ---------- Brand ---------- */
-.brand { text-align: center; margin-top: 6px; }
-.logo-ring {
-  width: 78px; height: 78px; margin: 0 auto;
-  border-radius: 50%;
-  display: grid; place-items: center;
-  background: conic-gradient(from 220deg, #6d8bff, #ff3d6e, #34d399, #6d8bff);
-  padding: 3px;
-  animation: spin 14s linear infinite;
+/* ---------- Brand: the wordmark IS the logo ---------- */
+.brand { text-align: center; margin-top: 10px; }
+.brand h1 {
+  margin: 0;
+  font-size: clamp(56px, 10vw, 96px);
+  font-weight: 800; letter-spacing: -0.045em; line-height: 1;
+  /* same treatment as the countdown digits — one type system */
+  background: linear-gradient(180deg, #fff, #c9d2ff);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  padding: .06em .04em; margin: -.06em -.04em;
 }
-.logo-ring .logo {
-  width: 100%; height: 100%; border-radius: 50%;
-  background: var(--bg);
-  display: grid; place-items: center;
-  font-size: 36px; line-height: 1;
+.brand h1 span {
+  background: none; -webkit-background-clip: initial; background-clip: initial;
+  color: var(--accent-2); -webkit-text-fill-color: var(--accent-2);
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-.brand h1 { margin: 12px 0 2px; font-size: 30px; font-weight: 800; letter-spacing: -0.03em; }
-.brand h1 span { color: var(--accent-2); }
-.subtitle { margin: 0; color: var(--muted); font-size: 14px; letter-spacing: .01em; }
+.subtitle { margin: 4px 0 0; color: var(--muted); font-size: 15px; letter-spacing: .01em; }
 
 /* ---------- Fields ---------- */
 .field {

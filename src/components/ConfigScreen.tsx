@@ -133,7 +133,6 @@ export default function ConfigScreen({ active }: { active: boolean }) {
   return (
     <main className={`screen${active ? ' is-active' : ''}`} aria-hidden={!active}>
       <header className="brand">
-        <div className="logo-ring"><div className="logo">{m.logo}</div></div>
         <h1>{brand.title}<span>.</span></h1>
         <p className="subtitle">{brand.subtitle}</p>
       </header>
