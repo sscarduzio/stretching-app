@@ -409,31 +409,23 @@ body[data-phase="recover"] .rep-dot.done { box-shadow: 0 0 6px rgba(52,211,153,.
 body[data-mode="boxe"] #grad-start { stop-color: #ffb84d; }
 body[data-mode="boxe"] #grad-end   { stop-color: #ff4d3d; }
 
-.mode-switch {
+.mode-select {
   position: fixed; top: calc(var(--safe-top) + 10px); right: 14px;
-  z-index: 30; display: flex; padding: 3px; border-radius: 13px;
-  gap: 2px;
+  z-index: 30; display: flex; align-items: center; gap: 7px;
+  padding: 9px 14px; border-radius: 999px; cursor: pointer; font-size: 14px;
 }
-.mode-btn {
-  border: none; background: transparent; color: var(--muted);
-  font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 10px;
-  cursor: pointer; transition: background .2s var(--ease), color .2s, box-shadow .2s;
-  display: flex; align-items: center; gap: 4px; white-space: nowrap;
+.mode-select select {
+  background: transparent; border: none; color: var(--text);
+  font: inherit; font-weight: 700; cursor: pointer; outline-offset: 3px;
 }
-.mode-btn.is-active {
-  background: linear-gradient(135deg, #6d8bff, #4f6ae0); color: #fff;
-  box-shadow: 0 3px 12px rgba(79,106,224,.4);
-}
-body[data-mode="boxe"] .mode-btn.is-active {
-  background: linear-gradient(135deg, #ff6b3d, #ff4d3d); color: #fff;
-  box-shadow: 0 3px 12px rgba(255,77,61,.4);
-}
-/* hide mode switch during a session */
-body[data-phase="hold"] .mode-switch,
-body[data-phase="work"] .mode-switch,
-body[data-phase="recover"] .mode-switch,
-body[data-phase="rest"] .mode-switch,
-body[data-phase="done"] .mode-switch { display: none; }
+.mode-select select option { background: #10131f; color: #fff; }
+.mode-select select:disabled { color: var(--muted); cursor: default; }
+body[data-mode="boxe"] /* hide mode switch during a session */
+body[data-phase="hold"] .mode-select,
+body[data-phase="work"] .mode-select,
+body[data-phase="recover"] .mode-select,
+body[data-phase="rest"] .mode-select,
+body[data-phase="done"] .mode-select { display: none; }
 
 /* ---------- About (info button + dialog) ---------- */
 .info-btn {
@@ -444,7 +436,7 @@ body[data-phase="done"] .mode-switch { display: none; }
   transition: background .2s var(--ease), transform .1s var(--ease);
 }
 .info-btn:active { background: rgba(255,255,255,.14); transform: scale(.94); }
-/* hide info button during a session, same as .mode-switch */
+/* hide info button during a session, same as .mode-select */
 body[data-phase="hold"] .info-btn,
 body[data-phase="work"] .info-btn,
 body[data-phase="recover"] .info-btn,
@@ -580,7 +572,7 @@ body[data-phase="prepare"] { --accent: #ffc53d; --accent-2: #ffb020; }
 body[data-phase="prepare"] .ring-fg { filter: drop-shadow(0 0 16px rgba(255,197,61,.5)); }
 body[data-phase="prepare"] .ring-glow { animation: breathe 2s ease-in-out infinite; }
 body[data-phase="prepare"] .topbar-live .dot { background: #ffc53d; box-shadow: 0 0 8px #ffc53d; }
-body[data-phase="prepare"] .mode-switch { display: none; }
+body[data-phase="prepare"] .mode-select { display: none; }
 
 /* ============================================================
    WIDE SCREENS (iPad / desktop) — first media queries in the app
@@ -702,11 +694,7 @@ body[data-mode="plank"] { background: #06110c; --accent: #2dd4a7; --accent-2: #1
 body[data-mode="plank"][data-phase="hold"] { --accent: #2dd4a7; --accent-2: #14b88a; }
 body[data-mode="plank"][data-phase="hold"] .ring-fg { filter: drop-shadow(0 0 16px rgba(45,212,167,.55)); }
 body[data-mode="plank"][data-phase="hold"] .ring-glow { animation: breathe 3s ease-in-out infinite; }
-body[data-mode="plank"] .mode-btn.is-active {
-  background: linear-gradient(135deg, #14b88a, #2dd4a7);
-  color: #04120d;
-}
-body[data-mode="plank"] .brand h1 span { color: #2dd4a7; }
+body[data-mode="plank"] body[data-mode="plank"] .brand h1 span { color: #2dd4a7; }
 body[data-mode="plank"] .primary {
   background: linear-gradient(135deg, #14b88a, #2dd4a7);
   box-shadow: 0 10px 34px rgba(45,212,167,.35);

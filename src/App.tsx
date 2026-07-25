@@ -11,24 +11,18 @@ import AboutOverlay from './components/AboutOverlay';
 function ModeSwitch() {
   const mode = useApp((s) => s.mode);
   const running = useApp((s) => s.running);
-  const setMode = (m: ModeKey) => {
-    if (running) return; // no mode switch mid-session
-    useApp.getState().set({ mode: m });
-    beep(660, 0.05);
-  };
   return (
-    <div className="mode-switch glass" role="tablist" aria-label={t.config.workoutModeAria}>
-      {(Object.keys(MODES) as ModeKey[]).map((m) => (
-        <button
-          key={m} type="button" role="tab"
-          className={`mode-btn${mode === m ? ' is-active' : ''}`}
-          aria-selected={mode === m}
-          onClick={() => setMode(m)}
-        >
-          <span aria-hidden="true">{MODES[m].logo}</span> <span>{t.modes[m].title}</span>
-        </button>
-      ))}
-    </div>
+    <label className="mode-select glass">
+      <span aria-hidden="true">{MODES[mode].logo}</span>
+      <select
+        aria-label={t.config.workoutModeAria} value={mode} disabled={running}
+        onChange={(e) => { useApp.getState().set({ mode: e.target.value as ModeKey }); beep(660, 0.05); }}
+      >
+        {(Object.keys(MODES) as ModeKey[]).map((m) => (
+          <option key={m} value={m}>{t.modes[m].title}</option>
+        ))}
+      </select>
+    </label>
   );
 }
 
