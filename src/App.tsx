@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Info } from 'lucide-react';
 import { beep } from './audio';
 import { t } from './i18n';
 import { MODES } from './modes';
@@ -11,9 +12,10 @@ import AboutOverlay from './components/AboutOverlay';
 function ModeSwitch() {
   const mode = useApp((s) => s.mode);
   const running = useApp((s) => s.running);
+  const ModeIcon = MODES[mode].logo;
   return (
     <label className="mode-select glass">
-      <span aria-hidden="true">{MODES[mode].logo}</span>
+      <ModeIcon aria-hidden="true" size={16} strokeWidth={2.4} />
       <select
         aria-label={t.config.workoutModeAria} value={mode} disabled={running}
         onChange={(e) => { useApp.getState().set({ mode: e.target.value as ModeKey }); beep(660, 0.05); }}
@@ -66,7 +68,7 @@ export default function App() {
         type="button" className="info-btn glass" aria-label={t.about.button}
         onClick={() => setAboutOpen(true)}
       >
-        <span aria-hidden="true">ℹ️</span>
+        <Info aria-hidden="true" size={19} />
       </button>
       <ModeSwitch />
       <Aurora />

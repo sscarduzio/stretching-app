@@ -2,6 +2,7 @@
 // entry here (plan builder, voice atoms, config fields) — no scattered mode
 // conditionals anywhere else. All user-facing strings live in src/i18n/.
 import type { ReactNode } from 'react';
+import { Droplets, Dumbbell, Flame, Flower2, PersonStanding, RefreshCw, Wind, type LucideIcon } from 'lucide-react';
 import { loadAtom, playAtom } from './audio';
 import { t } from './i18n';
 import type { Messages } from './i18n/en';
@@ -34,7 +35,7 @@ export interface Preset {
 
 export interface Mode {
   key: ModeKey;
-  logo: string;
+  logo: LucideIcon;
   themeColor: string;
   primaryType: PhaseType;
   voiceGap: number;
@@ -60,7 +61,7 @@ export interface Mode {
   sideBadge(p: Phase): string;
   phaseLabel(p: Phase): string;
   positionChips(p: Phase, cfg: Settings): { stretch?: string; round: string };
-  nextCard(next: Phase): { icon: string; text: string };
+  nextCard(next: Phase): { icon: LucideIcon; text: string };
   summary(cfg: Settings): ReactNode;
   doneText(cfg: Settings, totalTime: number): string;
 }
@@ -118,7 +119,7 @@ function buildPlankPlan(cfg: Settings): Phase[] {
 export const MODES: Record<ModeKey, Mode> = {
   stretch: {
     key: 'stretch',
-    logo: '🧘',
+    logo: Flower2,
     themeColor: '#05060f',
     primaryType: 'hold',
     voiceGap: 0.14,
@@ -162,9 +163,9 @@ export const MODES: Record<ModeKey, Mode> = {
       round: t.run.setChip(p.round!, cfg.sets),
     }),
     nextCard(next) {
-      if (next.type === 'hold') return { icon: '🤸', text: t.run.next.holdSide(next.side!) };
-      if (next.type === 'recover') return { icon: '🔄', text: next.nextStretch! > next.stretch! ? t.run.next.nextStretch : t.run.next.switchSides };
-      return { icon: '💨', text: t.run.next.rest };
+      if (next.type === 'hold') return { icon: PersonStanding, text: t.run.next.holdSide(next.side!) };
+      if (next.type === 'recover') return { icon: RefreshCw, text: next.nextStretch! > next.stretch! ? t.run.next.nextStretch : t.run.next.switchSides };
+      return { icon: Wind, text: t.run.next.rest };
     },
     summary(cfg) {
       const total = planDuration(buildStretchPlan(cfg)) + cfg.prepare;
@@ -177,7 +178,7 @@ export const MODES: Record<ModeKey, Mode> = {
 
   boxe: {
     key: 'boxe',
-    logo: '🥊',
+    logo: Flame,
     themeColor: '#100604',
     primaryType: 'work',
     voiceGap: 0.10,
@@ -217,8 +218,8 @@ export const MODES: Record<ModeKey, Mode> = {
     phaseLabel: (p) => (p.type === 'work' ? t.run.work : t.run.rest),
     positionChips: (p, cfg) => ({ round: t.run.roundChip(p.round!, cfg.boxRounds) }),
     nextCard(next) {
-      if (next.type === 'work') return { icon: '🥊', text: t.run.next.round(next.round!) };
-      return { icon: '💧', text: t.run.next.rest };
+      if (next.type === 'work') return { icon: Flame, text: t.run.next.round(next.round!) };
+      return { icon: Droplets, text: t.run.next.rest };
     },
     summary(cfg) {
       const total = planDuration(buildBoxPlan(cfg)) + cfg.prepare;
@@ -231,7 +232,7 @@ export const MODES: Record<ModeKey, Mode> = {
 
   plank: {
     key: 'plank',
-    logo: '💪',
+    logo: Dumbbell,
     themeColor: '#06110c',
     primaryType: 'hold',
     voiceGap: 0.14,
@@ -274,9 +275,9 @@ export const MODES: Record<ModeKey, Mode> = {
       round: t.run.setChip(p.round!, cfg.plankSets),
     }),
     nextCard(next) {
-      if (next.type === 'hold') return { icon: '💪', text: t.run.next.plank(next.stretch!) };
-      if (next.type === 'rest') return { icon: '💨', text: t.run.next.nextPlank };
-      return { icon: '💨', text: t.run.next.rest };
+      if (next.type === 'hold') return { icon: Dumbbell, text: t.run.next.plank(next.stretch!) };
+      if (next.type === 'rest') return { icon: Wind, text: t.run.next.nextPlank };
+      return { icon: Wind, text: t.run.next.rest };
     },
     summary(cfg) {
       const total = planDuration(buildPlankPlan(cfg)) + cfg.prepare;

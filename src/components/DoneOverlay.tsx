@@ -1,3 +1,4 @@
+import { Trophy } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { stop } from '../engine';
 import { t } from '../i18n';
@@ -22,7 +23,7 @@ export default function DoneOverlay() {
       role="dialog" aria-modal="true" aria-labelledby="done-title" aria-hidden={!finished}
     >
       <div className="overlay-card glass">
-        <div className="done-emoji" aria-hidden="true">{mode.key === 'boxe' ? '🥊' : '🎉'}</div>
+        <div className="done-emoji" aria-hidden="true"><Trophy size={46} /></div>
         <h2 id="done-title">{t.done.title}</h2>
         <p>{finished ? mode.doneText(settings, totalTime) : ''}</p>
         <button ref={backBtn} className="primary" onClick={stop}><span>{t.done.back}</span></button>

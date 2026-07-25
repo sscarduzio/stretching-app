@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Bell, Check, Globe, Mic, Music, Share2, Vibrate } from 'lucide-react';
 import { beep, setMusicVolume } from '../audio';
 import { start } from '../engine';
 import { LANGS, locale, setLocale, t } from '../i18n';
@@ -50,16 +51,16 @@ function PresetChip({ p, settings }: { p: Preset; settings: Settings }) {
 }
 
 const ALL_CHIPS = [
-  { k: 'voice', icon: '🔊', label: () => t.config.voice },
-  { k: 'beeps', icon: '⏱️', label: () => t.config.beeps },
-  { k: 'vibrate', icon: '📳', label: () => t.config.haptics },
-  { k: 'music', icon: '🎵', label: () => t.config.music },
+  { k: 'voice', icon: Mic, label: () => t.config.voice },
+  { k: 'beeps', icon: Bell, label: () => t.config.beeps },
+  { k: 'vibrate', icon: Vibrate, label: () => t.config.haptics },
+  { k: 'music', icon: Music, label: () => t.config.music },
 ] as const;
 
 // iOS WebKit has no Vibration API — don't show a toggle that can't work
 export const SOUND_CHIPS = ALL_CHIPS.filter((c) => c.k !== 'vibrate' || 'vibrate' in navigator);
 
-export function SoundChip({ k, icon, label }: (typeof ALL_CHIPS)[number]) {
+export function SoundChip({ k, icon: Ico, label }: (typeof ALL_CHIPS)[number]) {
   const on = useApp((s) => s[k]);
   return (
     <button
@@ -68,7 +69,7 @@ export function SoundChip({ k, icon, label }: (typeof ALL_CHIPS)[number]) {
       aria-pressed={on}
       onClick={() => useApp.getState().set({ [k]: !on })}
     >
-      <span className="ico" aria-hidden="true">{icon}</span>
+      <Ico className="ico" aria-hidden="true" size={18} />
       <span>{label()}</span>
     </button>
   );
@@ -91,7 +92,9 @@ function ShareButton() {
   };
   return (
     <button type="button" className="share-btn" onClick={share}>
-      {copied ? t.config.copied : <>📤 {t.config.share}</>}
+      {copied
+        ? <><Check aria-hidden="true" size={15} /> {t.config.copied}</>
+        : <><Share2 aria-hidden="true" size={15} /> {t.config.share}</>}
     </button>
   );
 }
@@ -99,7 +102,7 @@ function ShareButton() {
 function LangSelect() {
   return (
     <label className="lang-row glass">
-      <span aria-hidden="true">🌐</span>
+      <Globe aria-hidden="true" size={15} />
       <select aria-label={t.config.language} value={locale} onChange={(e) => setLocale(e.target.value)}>
         {Object.entries(LANGS).map(([k, name]) => <option key={k} value={k}>{name}</option>)}
       </select>

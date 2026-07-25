@@ -716,8 +716,16 @@ body[data-mode="plank"] .overlay-card h2 { color: #2dd4a7; }
 .dash-panel .vol-row { display: flex; align-items: center; gap: 12px; padding: 0; }
 .dash-panel .vol-row input[type="range"] { flex: 1; }
 
-/* ring gradient follows the mode (SVG stops are hardcoded red otherwise) */
-body[data-mode="plank"] .ring linearGradient stop:first-child { stop-color: #2dd4a7; }
-body[data-mode="plank"] .ring linearGradient stop:last-child { stop-color: #14b88a; }
-body[data-mode="boxe"] .ring linearGradient stop:first-child { stop-color: #ff8a3d; }
-body[data-mode="boxe"] .ring linearGradient stop:last-child { stop-color: #ff4d3d; }
+
+/* Lucide icons: align with text, inherit state colors */
+.share-btn { display: inline-flex; align-items: center; gap: 7px; }
+.next-icon svg { display: block; }
+.run-vol-icon svg { display: block; opacity: .8; }
+.done-emoji { display: flex; justify-content: center; color: var(--accent-2); }
+.mode-select > svg, .lang-row > svg { flex-shrink: 0; opacity: .85; }
+
+
+/* ring dims whenever the clock isn't counting (paused / voice lead-in) */
+.ring-wrap { transition: opacity .45s var(--ease); }
+.ring-wrap.is-dim .ring-fg, .ring-wrap.is-dim .ring-glow { opacity: .35; }
+.ring-wrap.is-dim .time { opacity: .55; }

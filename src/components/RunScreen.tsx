@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Expand, Hourglass, PartyPopper, Volume2 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { haptic } from '../audio';
 import { pause, resume, skip, stop } from '../engine';
@@ -46,6 +47,7 @@ function toggleTapPause() {
 
 function Ring() {
   const progress = useApp((s) => s.progress);
+  const paused = useApp((s) => s.paused);
   const display = useApp((s) => s.display);
   const phase = useApp((s) => s.plan[Math.min(s.idx, s.plan.length - 1)]);
   const mode = useApp((s) => MODES[s.mode]);
@@ -53,19 +55,30 @@ function Ring() {
   const { badge, label } = ringLabels(mode, phase);
   const badgeColor = phase.type === 'rest' ? 'var(--rest)'
     : phase.type === 'recover' ? 'var(--muted)' : 'var(--accent)';
+  // the ring is semantic, not decorative: emerald with time to spare,
+  // through amber, to red as the phase runs out — same in every mode
+  const hue = 145 * (1 - progress);
+  const c1 = `hsl(${hue + 12} 85% 64%)`;
+  const c2 = `hsl(${Math.max(0, hue - 10)} 90% 55%)`;
+  // dimmed whenever the clock isn't counting: paused, or the coach is
+  // still announcing (progress stays 0 through the voice lead-in)
+  const dim = paused || progress === 0;
   return (
-    <div className="ring-wrap" onClick={toggleTapPause}>
+    <div className={`ring-wrap${dim ? ' is-dim' : ''}`} onClick={toggleTapPause}>
       <svg viewBox="0 0 320 320" className="ring" aria-hidden="true">
         <defs>
           <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#ff7a7a" />
-            <stop offset="100%" stopColor="#ff3d6e" />
+            <stop offset="0%" style={{ stopColor: c1 }} />
+            <stop offset="100%" style={{ stopColor: c2 }} />
           </linearGradient>
         </defs>
         <circle className="ring-bg" cx="160" cy="160" r="140" />
         <circle
           className="ring-fg" cx="160" cy="160" r="140" pathLength={100}
-          style={{ strokeDasharray: 100, strokeDashoffset: 100 * progress }}
+          style={{
+            strokeDasharray: 100, strokeDashoffset: 100 * progress,
+            filter: `drop-shadow(0 0 16px hsl(${hue} 85% 60% / .55))`,
+          }}
         />
         {/* glow tracks the fg dash — a full-circle glow left a muddy residue
             arc over the drained part of the ring */}
@@ -98,14 +111,14 @@ function PhaseAnnouncer() {
 function NextCard() {
   const next = useApp((s) => s.plan[s.idx + 1]);
   const mode = useApp((s) => MODES[s.mode]);
-  const c = !next ? { icon: '🎉', text: t.run.next.finish }
-    : next.type === 'prepare' ? { icon: '🚦', text: t.run.next.getReady }
+  const c = !next ? { icon: PartyPopper, text: t.run.next.finish }
+    : next.type === 'prepare' ? { icon: Hourglass, text: t.run.next.getReady }
     : mode.nextCard(next);
   return (
     <div className="next-card glass">
       <span className="next-kicker">{t.run.upNext}</span>
       <span className="next-body">
-        <span className="next-icon" aria-hidden="true">{c.icon}</span>
+        <span className="next-icon" aria-hidden="true"><c.icon size={19} /></span>
         <span className="next-text">{c.text}</span>
       </span>
       <span className="next-dur">{next ? `${next.duration}s` : ''}</span>
@@ -223,7 +236,7 @@ export default function RunScreen({ active }: { active: boolean }) {
         </div>
         {s.music && (
           <div className="vol-row">
-            <span className="run-vol-icon" aria-hidden="true">🔊</span>
+            <span className="run-vol-icon" aria-hidden="true"><Volume2 size={17} /></span>
             <VolumeSlider id="run-vol-slider" />
           </div>
         )}
@@ -239,7 +252,7 @@ export default function RunScreen({ active }: { active: boolean }) {
           className={`ctrl ctrl-icon${settings.focus ? ' is-on' : ''}`}
           aria-pressed={settings.focus} aria-label={t.run.focus}
           onClick={() => useApp.getState().set({ focus: !settings.focus })}
-        ><span aria-hidden="true">⛶</span></button>
+        ><Expand aria-hidden="true" size={20} /></button>
       </div>
     </main>
   );
