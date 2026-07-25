@@ -40,10 +40,8 @@ export interface Mode {
   primaryType: PhaseType;
   voiceGap: number;
   repTitle: string;
-  distPrimaryLabel: string;
   /** true: music plays from the top of each primary phase, silent otherwise */
   musicFollowsRounds: boolean;
-  showStretchChip: boolean;
   /** progress-dot layout: grouped rows, or null for one flat row */
   grid(cfg: Settings): { groups: number; perGroup: number } | null;
   fields: FieldDef[];
@@ -93,7 +91,7 @@ function buildBoxPlan(cfg: Settings): Phase[] {
   for (let r = 1; r <= cfg.boxRounds; r++) {
     plan.push({ type: 'work', round: r, duration: cfg.boxWork });
     if (r < cfg.boxRounds && cfg.boxRest > 0)
-      plan.push({ type: 'rest', round: r, duration: cfg.boxRest, nextRound: r + 1 });
+      plan.push({ type: 'rest', round: r, duration: cfg.boxRest });
   }
   return plan;
 }
@@ -124,9 +122,7 @@ export const MODES: Record<ModeKey, Mode> = {
     primaryType: 'hold',
     voiceGap: 0.14,
     repTitle: t.run.holdsTitle,
-    distPrimaryLabel: t.run.legendHold,
     musicFollowsRounds: false,
-    showStretchChip: true,
     grid: (cfg) => (cfg.stretches > 1 ? { groups: cfg.stretches, perGroup: cfg.sets * 2 } : null),
     fields: [
       { key: 'hold', min: 5, max: 300, step: 5 },
@@ -183,9 +179,7 @@ export const MODES: Record<ModeKey, Mode> = {
     primaryType: 'work',
     voiceGap: 0.10,
     repTitle: t.run.roundsTitle,
-    distPrimaryLabel: t.run.legendWork,
     musicFollowsRounds: true,
-    showStretchChip: false,
     grid: () => null,
     fields: [
       { key: 'boxRounds', min: 1, max: 12, step: 1 },
@@ -237,9 +231,7 @@ export const MODES: Record<ModeKey, Mode> = {
     primaryType: 'hold',
     voiceGap: 0.14,
     repTitle: t.run.holdsTitle,
-    distPrimaryLabel: t.run.legendHold,
     musicFollowsRounds: false,
-    showStretchChip: true,
     grid: (cfg) => (cfg.plankExercises > 1 ? { groups: cfg.plankExercises, perGroup: cfg.plankSets } : null),
     fields: [
       { key: 'plankHold', min: 10, max: 300, step: 5 },

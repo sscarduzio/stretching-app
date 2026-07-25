@@ -61,6 +61,9 @@ function startPhase() {
   if (!p) return finish();
   const m = mode();
   phaseStart = performance.now();
+  // skipping while paused: anchor the pause to the fresh phase, or resume()
+  // would shift phaseStart by the whole pre-skip pause duration
+  if (s.paused) pauseAt = phaseStart;
   lastCount = -1; warned = false;
   comboPlan = []; comboPtr = 0;
 
@@ -78,8 +81,9 @@ function startPhase() {
   haptic(HAPTICS[p.type] ?? 0);
 
   // boxe: track restarts with each round, silence between rounds
+  // (never start audio while paused — resume() picks it back up)
   if (m.musicFollowsRounds && s.music) {
-    if (p.type === m.primaryType) restartMusic();
+    if (p.type === m.primaryType && !s.paused) restartMusic();
     else pauseMusic();
   }
 
@@ -153,7 +157,7 @@ function tick() {
 }
 
 /* ---------- lifecycle ---------- */
-export function buildPlan(): Phase[] {
+function buildPlan(): Phase[] {
   return mode().buildPlan(st());
 }
 
@@ -188,6 +192,7 @@ export function pause() {
   if (!s.running || s.paused) return;
   pauseAt = performance.now();
   cancelAnimationFrame(raf);
+  pauseMusic();
   s.set({ paused: true });
   releaseWakeLock();
 }
@@ -197,9 +202,24 @@ export function resume() {
   if (!s.paused) return;
   phaseStart += performance.now() - pauseAt;
   s.set({ paused: false });
+  // music resumes from where it paused (round-scoped only during work)
+  if (s.music) {
+    const m = mode();
+    const p = s.plan[s.idx];
+    if (!m.musicFollowsRounds || p?.type === m.primaryType) startMusic();
+  }
   void requestWakeLock();
   raf = requestAnimationFrame(tick);
 }
+
+// the Music chip works mid-session: stop/start the track live
+useApp.subscribe((s, prev) => {
+  if (s.music === prev.music || !s.running) return;
+  if (!s.music) { pauseMusic(); return; }
+  if (s.paused) return;
+  const m = MODES[s.mode];
+  if (!m.musicFollowsRounds || s.plan[s.idx]?.type === m.primaryType) startMusic();
+});
 
 export function skip() {
   if (st().running) nextPhase();

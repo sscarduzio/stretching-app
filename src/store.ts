@@ -12,7 +12,6 @@ export interface Phase {
   round?: number;
   side?: 'left' | 'right';
   nextStretch?: number;
-  nextRound?: number;
 }
 
 export interface Settings {

@@ -72,9 +72,7 @@ export const en = {
   },
 
   run: {
-    now: 'now', endsAbout: 'ends ~', live: 'LIVE', upNext: 'UP NEXT',
-    session: 'Session', complete: 'complete', elapsed: 'elapsed', remaining: 'remaining',
-    timeSplit: 'Time split',
+    now: 'now', endsAbout: 'ends ~', live: 'LIVE', upNext: 'UP NEXT', complete: 'complete', elapsed: 'elapsed', remaining: 'remaining',
     focus: 'Focus mode',
     pause: '⏸ Pause', resume: '▶ Resume', skip: '⏭ Skip', stop: '⏹ Stop',
     stretchChip: (n: number, total: number) => `Stretch ${n} / ${total}`,
@@ -85,7 +83,6 @@ export const en = {
     left: 'LEFT', right: 'RIGHT', ready: 'READY', getReady: 'GET READY',
     plank: 'PLANK', plankChip: (n: number, total: number) => `Plank ${n} / ${total}`,
     holdsTitle: 'Holds', roundsTitle: 'Rounds',
-    legendHold: 'Hold', legendWork: 'Work', legendRecover: 'Recover', legendRest: 'Rest',
     next: {
       holdSide: (side: 'left' | 'right') => `${side} side · stretch`,
       nextStretch: 'Next stretch', switchSides: 'Switch sides', rest: 'Rest',

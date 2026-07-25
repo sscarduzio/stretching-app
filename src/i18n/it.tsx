@@ -66,9 +66,7 @@ export const it: Messages = {
   },
 
   run: {
-    now: 'ora', endsAbout: 'fine ~', live: 'LIVE', upNext: 'A SEGUIRE',
-    session: 'Sessione', complete: 'completato', elapsed: 'trascorso', remaining: 'rimanente',
-    timeSplit: 'Ripartizione',
+    now: 'ora', endsAbout: 'fine ~', live: 'LIVE', upNext: 'A SEGUIRE', complete: 'completato', elapsed: 'trascorso', remaining: 'rimanente',
     focus: 'Modalità focus',
     pause: '⏸ Pausa', resume: '▶ Riprendi', skip: '⏭ Salta', stop: '⏹ Stop',
     stretchChip: (n, total) => `Esercizio ${n} / ${total}`,
@@ -78,7 +76,6 @@ export const it: Messages = {
     left: 'SINISTRA', right: 'DESTRA', ready: 'PRONTI', getReady: 'PREPARATI',
     plank: 'PLANK', plankChip: (n, total) => `Plank ${n} / ${total}`,
     holdsTitle: 'Tenute', roundsTitle: 'Round',
-    legendHold: 'Tenuta', legendWork: 'Lavoro', legendRecover: 'Recupero', legendRest: 'Riposo',
     next: {
       holdSide: (side) => `lato ${side === 'left' ? 'sinistro' : 'destro'} · allungamento`,
       nextStretch: 'Prossimo esercizio', switchSides: 'Cambia lato', rest: 'Riposo',

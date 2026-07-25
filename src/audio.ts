@@ -77,6 +77,7 @@ export function cutVoice(): void {
   activeSources.length = 0;
 }
 
+// NOTE: cache key is the atom name only — names must be unique across dirs
 export function loadAtom(name: string, dir: string = VOICE_DIR): Promise<AudioBuffer> {
   const cached = atomCache.get(name);
   if (cached) return Promise.resolve(cached);
@@ -89,6 +90,8 @@ export function loadAtom(name: string, dir: string = VOICE_DIR): Promise<AudioBu
     atomCache.set(name, ab);
     return ab;
   })();
+  // a failed fetch must not poison the atom forever — allow retry
+  p.catch(() => { atomLoading.delete(name); });
   atomLoading.set(name, p);
   return p;
 }

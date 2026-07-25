@@ -406,8 +406,6 @@ body[data-phase="recover"] .rep-dot.done { box-shadow: 0 0 6px rgba(52,211,153,.
 /* ring gradient stops — themed per mode (CSS overrides SVG attr) */
 #grad-start { stop-color: #ff7a7a; }
 #grad-end   { stop-color: #ff3d6e; }
-body[data-mode="boxe"] #grad-start { stop-color: #ffb84d; }
-body[data-mode="boxe"] #grad-end   { stop-color: #ff4d3d; }
 
 .mode-select {
   position: fixed; top: calc(var(--safe-top) + 10px); right: 14px;
@@ -420,7 +418,7 @@ body[data-mode="boxe"] #grad-end   { stop-color: #ff4d3d; }
 }
 .mode-select select option { background: #10131f; color: #fff; }
 .mode-select select:disabled { color: var(--muted); cursor: default; }
-body[data-mode="boxe"] /* hide mode switch during a session */
+/* hide sport selector during a session */
 body[data-phase="hold"] .mode-select,
 body[data-phase="work"] .mode-select,
 body[data-phase="recover"] .mode-select,
@@ -495,8 +493,6 @@ body[data-mode="boxe"][data-phase="rest"] { --accent: #5b8aff; --accent-2: #6d8b
 body[data-mode="boxe"][data-phase="rest"] .ring-fg { filter: drop-shadow(0 0 16px rgba(91,138,255,.5)); }
 body[data-mode="boxe"][data-phase="rest"] .ring-glow { animation: breathe 3s ease-in-out infinite; }
 
-/* boxing time-split bar (work = orange/red, rest = blue) */
-body[data-mode="boxe"] body[data-mode="boxe"] body[data-mode="boxe"] body[data-mode="boxe"] 
 /* boxing rep dots (round dots glow orange) */
 body[data-mode="boxe"] .rep-dot.done {
   background: linear-gradient(135deg, var(--accent-2), var(--accent));
@@ -694,12 +690,12 @@ body[data-mode="plank"] { background: #06110c; --accent: #2dd4a7; --accent-2: #1
 body[data-mode="plank"][data-phase="hold"] { --accent: #2dd4a7; --accent-2: #14b88a; }
 body[data-mode="plank"][data-phase="hold"] .ring-fg { filter: drop-shadow(0 0 16px rgba(45,212,167,.55)); }
 body[data-mode="plank"][data-phase="hold"] .ring-glow { animation: breathe 3s ease-in-out infinite; }
-body[data-mode="plank"] body[data-mode="plank"] .brand h1 span { color: #2dd4a7; }
+body[data-mode="plank"] .brand h1 span { color: #2dd4a7; }
 body[data-mode="plank"] .primary {
   background: linear-gradient(135deg, #14b88a, #2dd4a7);
   box-shadow: 0 10px 34px rgba(45,212,167,.35);
 }
-body[data-mode="plank"] body[data-mode="plank"] body[data-mode="plank"] .rep-dot.done {
+body[data-mode="plank"] .rep-dot.done {
   background: linear-gradient(135deg, #14b88a, #2dd4a7);
   box-shadow: 0 0 6px rgba(45,212,167,.45);
 }
